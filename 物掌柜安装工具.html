@@ -1,71 +1,71 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>安装物掌柜</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
-.wrap{max-width:320px;width:100%;text-align:center}
-.wrap h1{font-size:48px;margin-bottom:4px}
-.wrap h2{font-size:18px;margin-bottom:4px}
-.wrap .sub{font-size:12px;color:#6b7280;margin-bottom:20px}
-.wrap .sub2{font-size:13px;color:#a0a8c0;margin-bottom:16px}
-.pick{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
-.pick button{padding:14px 16px;border-radius:12px;border:1px solid #2a2e3a;background:#141826;color:#eef2fb;font-size:15px;cursor:pointer;min-width:70px}
-.pick button.on{background:#4f8cff;border-color:#4f8cff}
-#result{margin-top:12px}
-.btn{display:block;width:100%;padding:18px;border-radius:14px;font-size:18px;font-weight:700;text-decoration:none;cursor:pointer;border:none;background:#4f8cff;color:#fff;margin-bottom:8px}
-.tip{font-size:11px;color:#6b7280;line-height:1.6;text-align:left;padding:0 8px}
-</style>
-</head>
+.w{max-width:300px;text-align:center}
+.w h1{font-size:56px;margin-bottom:4px}
+.w h2{font-size:18px;margin-bottom:16px}
+.w button{padding:16px 20px;margin:4px;border-radius:12px;border:1px solid #2a2e3a;background:#141826;color:#eef2fb;font-size:16px;cursor:pointer;min-width:120px}
+.w button.on{background:#4f8cff;border-color:#4f8cff}
+#go{display:none;width:100%;padding:18px;border-radius:14px;font-size:18px;font-weight:700;background:#4f8cff;color:#fff;border:none;cursor:pointer;margin-top:16px}
+#tip{display:none;font-size:11px;color:#6b7280;margin-top:10px;line-height:1.5}
+</style></head>
 <body>
-<div class="wrap">
+<div class="w">
 <h1>📦</h1>
 <h2>物掌柜 StuffManage</h2>
-<div class="sub">家庭物品 · 资金 · 借贷 · 人情</div>
-<div class="sub2">选择你的设备类型</div>
-
-<div class="pick">
-  <button onclick="doit('ios')">📱 iPhone</button>
-  <button onclick="doit('android')">🤖 安卓</button>
-  <button onclick="doit('mac')">💻 Mac</button>
-  <button onclick="doit('win')">🪟 Windows</button>
+<button onclick="pick('ios')">📱 iPhone</button>
+<button onclick="pick('android')">🤖 安卓</button><br>
+<button onclick="pick('mac')">💻 Mac</button>
+<button onclick="pick('win')">🪟 Windows</button>
+<button id="go"></button>
+<div id="tip"></div>
 </div>
-
-<div id="result"></div>
-</div>
-
 <script>
-var BASE='https://446968488.github.io/wuzhanggui';
+var os='';
+function pick(o){
+  os=o;
+  document.querySelectorAll('.w>button:not(#go)').forEach(function(b){
+    b.classList.toggle('on',b.textContent.indexOf({ios:'iPhone',android:'安卓',mac:'Mac',win:'Windows'}[o])!==-1);
+  });
+  var go=document.getElementById('go');
+  var tip=document.getElementById('tip');
+  go.style.display='block';
+  tip.style.display='block';
 
-function doit(os){
-  document.querySelectorAll('.pick button').forEach(function(b){b.classList.remove('on')});
-  var btns=document.querySelectorAll('.pick button');
-  if(os==='ios') btns[0].classList.add('on');
-  else if(os==='android') btns[1].classList.add('on');
-  else if(os==='mac') btns[2].classList.add('on');
-  else if(os==='win') btns[3].classList.add('on');
-
-  var r=document.getElementById('result');
-
-  if(os==='ios'){
-    r.innerHTML=''+
-      '<a class="btn" href="'+BASE+'/index.html">📱 在 Safari 中打开</a>'+
-      '<div class="tip">打开后：点击底栏 ↑ 分享按钮 → 滑动找到"<b>添加到主屏幕</b>" → 右上角"添加" → 桌面出现图标 ✅</div>';
-  }else if(os==='android'){
-    r.innerHTML=''+
-      '<a class="btn" href="'+BASE+'/index.html">🤖 在 Chrome 中打开</a>'+
-      '<div class="tip">打开后：Chrome 自动弹出"<b>添加到主屏幕</b>" → 点击"安装" → 桌面出现图标 ✅<br>如未弹窗，点右上角 ⋮ → 添加到主屏幕</div>';
-  }else if(os==='mac'){
-    r.innerHTML=''+
-      '<a class="btn" href="'+BASE+'/物掌柜.command" download>💻 下载桌面启动器</a>'+
-      '<div class="tip">1. 点上方按钮下载文件<br>2. 双击运行 → 出现独立窗口<br>3. 拖到桌面或程序坞<br>4. 以后双击图标就能打开 ✅</div>';
-  }else if(os==='win'){
-    r.innerHTML=''+
-      '<a class="btn" href="'+BASE+'/物掌柜-Windows安装.bat" download>🪟 下载桌面启动器</a>'+
-      '<div class="tip">1. 点上方按钮下载文件<br>2. 双击运行 → 出现独立窗口<br>3. 右键 → 发送到桌面<br>4. 以后双击图标就能打开 ✅</div>';
+  if(o==='ios'){
+    go.textContent='📱 在 Safari 中打开然后添加到主屏幕';
+    go.onclick=function(){location.href='https://446968488.github.io/wuzhanggui/';};
+    tip.innerHTML='Safari 打开后 → 底栏 ↑ 分享 → <b>添加到主屏幕</b> → 完成';
+  }else if(o==='android'){
+    go.textContent='🤖 在 Chrome 中打开然后添加到主屏幕';
+    go.onclick=function(){location.href='https://446968488.github.io/wuzhanggui/';};
+    tip.innerHTML='Chrome 打开后会自动弹出安装提示，点击安装即可';
+  }else if(o==='mac'){
+    go.textContent='💻 点此安装，桌面自动出图标';
+    tip.innerHTML='下载后双击运行，物掌柜窗口就出来了。拖到桌面或程序坞，以后双击即开。';
+    go.onclick=function(){
+      var c='#!/bin/bash\nopen -a "Google Chrome" --args --app=https://446968488.github.io/wuzhanggui/';
+      var b=new Blob([c],{type:'application/octet-stream'});
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(b);
+      a.download='物掌柜.command';
+      a.click();
+    };
+  }else if(o==='win'){
+    go.textContent='🪟 点此安装，桌面自动出图标';
+    tip.innerHTML='下载后双击运行，物掌柜窗口就出来了。右键 → 发送到桌面，以后双击即开。';
+    go.onclick=function(){
+      var c='@echo off\r\nstart chrome --app=https://446968488.github.io/wuzhanggui/';
+      var b=new Blob([c],{type:'application/octet-stream'});
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(b);
+      a.download='物掌柜-Windows安装.bat';
+      a.click();
+    };
   }
 }
 </script>
