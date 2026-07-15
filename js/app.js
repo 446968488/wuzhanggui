@@ -49,6 +49,7 @@
     activeSnapshot: null,
     locateFilter: { cat: '', addr: '', period: '' },
     backupReady: false,     // 备份数据是否已准备就绪
+    lastBackupAt: 0,        // 上次备份时间戳
     pendingBackup: null,    // 待导出的备份数据 { meta, stores }
     editFavorId: '',
     favorView: 'event',
@@ -94,6 +95,19 @@
     await migrateFavorsV4();
     render();
     bindEvents();
+    // 申请持久存储，减少浏览器自动清除数据的风险
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().then(function(granted) {
+        if (!granted) console.log('持久存储未授权，数据可能被浏览器清理');
+      });
+    }
+    // 数据安全提示：关闭页面时弹窗提醒（仅一次）
+    var warned = sessionStorage.getItem('sm_close_warn') === '1';
+    if (!warned && state.items.length + state.accounts.length > 0) {
+      window.addEventListener('beforeunload', function(e) {
+        sessionStorage.setItem('sm_close_warn', '1');
+      });
+    }
   }
 
   async function ensureDefaults() {
@@ -124,6 +138,17 @@
     [state.items, state.accounts, state.loans, state.snapshots, state.stockLogs, state.accountLogs, state.favors, state.feedbacks, state.persons] = await Promise.all([
       DB.getAll('items'), DB.getAll('accounts'), DB.getAll('loans'), DB.getAll('snapshots'), DB.getAll('stockLogs'), DB.getAll('accountLogs'), DB.getAll('favors'), DB.getAll('feedbacks'), DB.getAll('persons'),
     ]);
+    // 检查上次备份时间
+    try { state.lastBackupAt = JSON.parse(localStorage.getItem('sm_last_backup') || '0'); } catch(e){ state.lastBackupAt = 0; }
+  }
+
+  function warnClearCache() {
+    // 有数据且超过7天未备份 → 显示提醒
+    var hasData = state.items.length + state.accounts.length + state.favors.length + state.loans.length > 0;
+    var daysSince = state.lastBackupAt ? Math.floor((Date.now() - state.lastBackupAt)/(86400000)) : 999;
+    if (!hasData) return '';
+    if (daysSince < 7) return '';
+    return '<div class="card" style="background:rgba(255,93,108,.08);border:1px solid rgba(255,93,108,.25);margin-bottom:10px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">⚠️</span><div style="flex:1;font-size:12px;line-height:1.6;color:#ff8e9e"><b>数据安全提醒</b><br>所有数据存在本机浏览器缓存中，<b>清除浏览器数据会丢失全部资料</b>。请前往「设置 → 一键备份」导出备份。</div><button class="btn sm" data-tab="settings">去备份 ›</button></div></div>';
   }
 
   // ================= 渲染入口 =================
@@ -346,7 +371,7 @@
         </div>
       </div>`;
 
-    return summaryHTML + funHTML + funcHTML + itemsHTML + fundsHTML + loansHTML + rewardHTML;
+    return summaryHTML + warnClearCache() + funHTML + funcHTML + itemsHTML + fundsHTML + loansHTML + rewardHTML;
   }
 
   function itemCardHTML(it) {
@@ -2135,6 +2160,8 @@
     const data = { meta: { app: '物掌柜 StuffManage', version: 5, exportedAt: new Date().toISOString() }, stores };
     state.pendingBackup = data;
     state.backupReady = true;
+    state.lastBackupAt = Date.now();
+    localStorage.setItem('sm_last_backup', JSON.stringify(state.lastBackupAt));
     render();
     // 统计总条数
     const total = Object.values(stores).reduce((s, arr) => s + arr.length, 0);
