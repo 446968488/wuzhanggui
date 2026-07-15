@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1115">
+  <title>物掌柜 · StuffManage</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/styles.css?v=32">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">📦 物掌柜 <span class="brand-en">StuffManage</span></div>
+    <div class="brand-ver">v=32</div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <main id="view"></main>
+
+  <!-- 一键截图分享浮动按钮 -->
+  <button id="shareFab" class="fab" data-action="open-share" title="截图分享">📷<span>截图</span></button>
+
+  <!-- 条码打印专用区（默认隐藏，打印时显示） -->
+  <div id="printArea" aria-hidden="true"></div>
+
+  <script src="lib/JsBarcode.all.min.js?v=3"></script>
+  <script src="lib/html2canvas.min.js?v=1"></script>
+  <script src="js/db.js?v=3"></script>
+  <script src="js/crypto.js?v=3"></script>
+  <script src="js/app.js?v=32"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}</script>
+</body>
+</html>

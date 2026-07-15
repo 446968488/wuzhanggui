@@ -1,0 +1,9 @@
+.workbuddy/
+_check.py
+_debug.py
+_chk.html
+_preview_*.html
+.env
+node_modules/
+.DS_Store
+*.tmp

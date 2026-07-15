@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#2b3330"/><stop offset="1" stop-color="#1b221f"/>
+  </linearGradient></defs>
+  <rect x="7" y="7" width="86" height="86" rx="20" fill="url(#g)" stroke="#3a4150" stroke-width="2.5" stroke-dasharray="6 5"/>
+  <text x="50" y="60" font-size="46" text-anchor="middle" dominant-baseline="middle">🏠</text>
+</svg>
