@@ -20,7 +20,14 @@ var FAVOR_KINDS = {
 function toast(m){var t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1d28;color:#fff;padding:10px 24px;border-radius:10px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeOut 2s forwards';document.body.appendChild(t);setTimeout(function(){t.remove()},2200)}
 
 // ============ 初始化 ============
-DB.open().then(refresh).then(render);
+DB.open().then(function(){
+  return refresh();
+}).then(function(){
+  render();
+}).catch(function(err){
+  document.getElementById('view').innerHTML = '<div class="card empty"><div class="big">😵</div>加载失败：'+err.message+'<br><span style="font-size:12px;color:var(--muted)">请刷新试试，或换个浏览器</span></div>';
+  console.error(err);
+});
 
 async function refresh(){
   [state.favors, state.persons, state.accounts] = await Promise.all([DB.getAll('favors'),DB.getAll('persons'),DB.getAll('accounts')]);
