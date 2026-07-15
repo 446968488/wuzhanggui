@@ -1738,7 +1738,7 @@
     else if (recip) { party0 = recip.party || ''; }
     else if (recipName) { party0 = recipName; }
     const rowHTML = favorRowHTML({ party: party0, amount: amount0, accountId: acc0, recipOf: recipOf0 }, favorAccOpts(acc0), single);
-    const title = editing ? '✏️ 修改随礼' : (recip || recipName ? '🔁 回礼 · 我随礼给「' + (recip ? recip.party : recipName) + '」' : '填写随礼信息');
+    const title = editing ? '✏️ 修改随礼' : (recip ? '🔁 回礼 · 我随礼给「' + (recip.party || '') + '」' : (recipName ? '🔁 回礼 · 我随礼给「' + recipName + '」' : '➕ 添加随礼'));
     const addRowBtn = single ? '' : `<button type="button" class="btn ghost sm mt" data-action="favor-add-row">+ 加一行</button>`;
     return `<div class="card"><h3>${title}</h3>
       <form id="favorForm" data-edit="${editing ? editing.id : ''}" onsubmit="return false">
@@ -1755,7 +1755,7 @@
         <div id="favorRows">${rowHTML}</div>
         ${addRowBtn}
         <div class="modal-actions">
-          <button class="btn ghost" data-action="favor-add">取消</button>
+          <button class="btn ghost" data-action="favor-add">收起</button>
           <button class="btn" data-action="save-favor">保存</button>
         </div>
       </form></div>`;
@@ -2021,7 +2021,7 @@
         ${seg}
         <div class="summary">
           <div class="box" style="flex:0 0 auto"><div class="k">随礼笔数</div><div class="v">${total}</div></div>
-          ${form ? '' : `<button class="btn" style="flex:0 0 auto;align-self:center" data-action="favor-add">➕ 添加随礼</button>`}
+          <button class="btn" style="flex:0 0 auto;align-self:center" data-action="favor-add">➕ 添加随礼</button>
         </div>
         ${form}
         <div class="card">${view === 'person' ? favorByPersonHTML() : favorByEventHTML()}</div>`;
