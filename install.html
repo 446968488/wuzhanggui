@@ -6,54 +6,61 @@
 <meta name="theme-color" content="#0f1115">
 <link rel="manifest" href="manifest.webmanifest">
 <title>物掌柜 · 安装</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.c{text-align:center;max-width:320px}
-.c h1{font-size:40px;margin-bottom:8px}
-.c h2{font-size:20px;margin-bottom:4px}
-.c p{font-size:13px;color:#a0a8c0;margin-bottom:20px;line-height:1.6}
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+.c{max-width:340px;text-align:center}
+.c h1{font-size:56px;margin-bottom:4px}
+.c h2{font-size:20px;margin-bottom:6px}
+.c p{font-size:13px;color:#a0a8c0;margin-bottom:24px;line-height:1.5}
 .c a{display:block;padding:18px;background:#4f8cff;color:#fff;border-radius:14px;font-size:18px;font-weight:700;text-decoration:none;margin-bottom:10px}
-.c .tip{font-size:11px;color:#6b7280;line-height:1.5}
-.c .alt{display:block;padding:12px;background:transparent;color:#a0a8c0;border:1px solid #2a2e3a;border-radius:12px;font-size:14px;text-decoration:none;margin-top:8px}
+.c .tip{font-size:11px;color:#6b7280;line-height:1.5;margin-bottom:12px}
 </style>
 </head>
 <body>
 <div class="c">
 <h1 id="ico">📦</h1>
-<h2 id="title">物掌柜 · 安装到桌面</h2>
-<p id="desc">家庭物品 · 资金 · 借贷 · 人情往来</p>
-<a id="mainBtn" href="index.html">打开物掌柜</a>
+<h2 id="title">物掌柜 StuffManage</h2>
+<p id="desc"></p>
+<a id="btn" href="#">安装物掌柜</a>
 <div class="tip" id="tip"></div>
-<a class="alt" href="index.html">直接进入（不安装）</a>
 </div>
 <script>
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
-var os='';
 var ua=navigator.userAgent;
+var os='';
 if(/iPhone|iPad/i.test(ua)) os='ios';
 else if(/Android/i.test(ua)) os='android';
 else if(/Mac/i.test(ua)) os='mac';
 else if(/Windows/i.test(ua)) os='win';
 
+var btn=document.getElementById('btn');
+var tip=document.getElementById('tip');
+
 if(os==='ios'){
   document.getElementById('ico').textContent='📱';
-  document.getElementById('mainBtn').textContent='添加到主屏幕';
-  document.getElementById('tip').innerHTML='① 点击上方按钮在 Safari 打开<br>② 点底部 ↑ 分享 → 添加到主屏幕<br>③ 桌面出现图标，完成 ✅';
+  btn.textContent='添加到主屏幕';
+  btn.href='index.html';
+  tip.innerHTML='用 Safari 打开 → 底部分享 ↑ → 添加到主屏幕';
 }else if(os==='android'){
   document.getElementById('ico').textContent='🤖';
-  document.getElementById('mainBtn').textContent='安装到桌面';
-  document.getElementById('tip').innerHTML='① 点击上方按钮在 Chrome 打开<br>② Chrome 自动弹出安装提示<br>③ 桌面出现图标，完成 ✅';
+  btn.textContent='安装到桌面';
+  btn.href='index.html';
+  tip.innerHTML='用 Chrome 打开 → 自动弹安装提示 → 桌面图标';
 }else if(os==='mac'){
   document.getElementById('ico').textContent='💻';
-  document.getElementById('mainBtn').textContent='安装到程序坞';
-  document.getElementById('tip').innerHTML='① 点击上方按钮在 Chrome 打开<br>② 等 3 秒，地址栏右侧出现 ⊕<br>③ 点击 ⊕ → 程序坞出现图标 ✅';
+  btn.textContent='下载 Mac 桌面启动器';
+  btn.href='物掌柜.command';
+  btn.setAttribute('download','物掌柜.command');
+  tip.innerHTML='1. 点击下载文件<br>2. 双击运行 → 出现物掌柜窗口<br>3. 拖到桌面或程序坞<br>4. 以后双击图标就能打开 ✅';
 }else if(os==='win'){
   document.getElementById('ico').textContent='🪟';
-  document.getElementById('mainBtn').textContent='安装到桌面';
-  document.getElementById('tip').innerHTML='① 点击上方按钮在 Chrome 打开<br>② 等 3 秒，地址栏右侧出现 ⊕<br>③ 点击 ⊕ → 桌面出现图标 ✅';
+  btn.textContent='下载 Windows 桌面启动器';
+  btn.href='物掌柜-Windows安装.bat';
+  btn.setAttribute('download','物掌柜-Windows安装.bat');
+  tip.innerHTML='1. 点击下载文件<br>2. 双击运行 → 出现物掌柜窗口<br>3. 右键 → 发送到桌面<br>4. 以后双击图标就能打开 ✅';
 }else{
-  document.getElementById('tip').innerHTML='请用 Chrome / Safari / Edge 打开';
+  btn.textContent='打开物掌柜';
+  btn.href='index.html';
 }
 </script>
 </body>
