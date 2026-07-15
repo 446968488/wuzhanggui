@@ -732,7 +732,7 @@ table.grid td.op-del   { position: sticky; right: 0;     z-index: 5; background:
 
   /* 汇总盒：行内「添加」按钮独占一行，整齐不散 */
   .summary { gap: 10px; }
-  .summary .box { min-width: 0; padding: 10px; }
+  .summary .box { flex: 0 0 calc(50% - 5px); min-width: 0; padding: 10px; }
   .summary .btn { flex: 1 1 100% !important; order: 9; }
   /* 两行布局：按钮不独占一行，与账户总数并排 */
   .summary-two-row .btn { flex: 0 0 auto !important; order: 0; }
