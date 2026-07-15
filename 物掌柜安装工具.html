@@ -1,73 +1,18 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>安装物掌柜</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
-.w{max-width:300px;text-align:center}
-.w h1{font-size:56px;margin-bottom:4px}
-.w h2{font-size:18px;margin-bottom:16px}
-.w button{padding:16px 20px;margin:4px;border-radius:12px;border:1px solid #2a2e3a;background:#141826;color:#eef2fb;font-size:16px;cursor:pointer;min-width:120px}
-.w button.on{background:#4f8cff;border-color:#4f8cff}
-#go{display:none;width:100%;padding:18px;border-radius:14px;font-size:18px;font-weight:700;background:#4f8cff;color:#fff;border:none;cursor:pointer;margin-top:16px}
-#tip{display:none;font-size:11px;color:#6b7280;margin-top:10px;line-height:1.5}
+body{background:#0f1115;color:#eef2fb;font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.c{text-align:center;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.c h1{font-size:64px;margin-bottom:12px}
+.c p{font-size:14px;color:#a0a8c0}
 </style></head>
 <body>
-<div class="w">
-<h1>📦</h1>
-<h2>物掌柜 StuffManage</h2>
-<button onclick="pick('ios')">📱 iPhone</button>
-<button onclick="pick('android')">🤖 安卓</button><br>
-<button onclick="pick('mac')">💻 Mac</button>
-<button onclick="pick('win')">🪟 Windows</button>
-<button id="go"></button>
-<div id="tip"></div>
-</div>
+<div class="c"><h1>📦</h1><p>正在打开安装页面…</p></div>
 <script>
-var os='';
-function pick(o){
-  os=o;
-  document.querySelectorAll('.w>button:not(#go)').forEach(function(b){
-    b.classList.toggle('on',b.textContent.indexOf({ios:'iPhone',android:'安卓',mac:'Mac',win:'Windows'}[o])!==-1);
-  });
-  var go=document.getElementById('go');
-  var tip=document.getElementById('tip');
-  go.style.display='block';
-  tip.style.display='block';
-
-  if(o==='ios'){
-    go.textContent='📱 在 Safari 中打开然后添加到主屏幕';
-    go.onclick=function(){location.href='https://446968488.github.io/wuzhanggui/';};
-    tip.innerHTML='Safari 打开后 → 底栏 ↑ 分享 → <b>添加到主屏幕</b> → 完成';
-  }else if(o==='android'){
-    go.textContent='🤖 在 Chrome 中打开然后添加到主屏幕';
-    go.onclick=function(){location.href='https://446968488.github.io/wuzhanggui/';};
-    tip.innerHTML='Chrome 打开后会自动弹出安装提示，点击安装即可';
-  }else if(o==='mac'){
-    go.textContent='💻 点此安装，桌面自动出图标';
-    tip.innerHTML='下载后双击运行，物掌柜窗口就出来了。拖到桌面或程序坞，以后双击即开。';
-    go.onclick=function(){
-      var c='#!/bin/bash\nopen -a "Google Chrome" --args --app=https://446968488.github.io/wuzhanggui/';
-      var b=new Blob([c],{type:'application/octet-stream'});
-      var a=document.createElement('a');
-      a.href=URL.createObjectURL(b);
-      a.download='物掌柜.command';
-      a.click();
-    };
-  }else if(o==='win'){
-    go.textContent='🪟 点此安装，桌面自动出图标';
-    tip.innerHTML='下载后双击运行，物掌柜窗口就出来了。右键 → 发送到桌面，以后双击即开。';
-    go.onclick=function(){
-      var c='@echo off\r\nstart chrome --app=https://446968488.github.io/wuzhanggui/';
-      var b=new Blob([c],{type:'application/octet-stream'});
-      var a=document.createElement('a');
-      a.href=URL.createObjectURL(b);
-      a.download='物掌柜-Windows安装.bat';
-      a.click();
-    };
-  }
-}
+location.replace('https://446968488.github.io/wuzhanggui/install.html');
 </script>
 </body>
 </html>

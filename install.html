@@ -5,62 +5,91 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0f1115">
 <link rel="manifest" href="manifest.webmanifest">
-<title>物掌柜 · 安装</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
-.c{max-width:340px;text-align:center}
-.c h1{font-size:56px;margin-bottom:4px}
-.c h2{font-size:20px;margin-bottom:6px}
-.c p{font-size:13px;color:#a0a8c0;margin-bottom:24px;line-height:1.5}
-.c a{display:block;padding:18px;background:#4f8cff;color:#fff;border-radius:14px;font-size:18px;font-weight:700;text-decoration:none;margin-bottom:10px}
-.c .tip{font-size:11px;color:#6b7280;line-height:1.5;margin-bottom:12px}
-</style>
-</head>
+<title>安装物掌柜</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+.w{max-width:300px;text-align:center}
+.w h1{font-size:60px;margin-bottom:4px}
+.w h2{font-size:18px;margin-bottom:20px}
+.w button{display:block;width:100%;padding:18px;border-radius:14px;font-size:20px;font-weight:700;cursor:pointer;border:none;margin-bottom:12px}
+#macWin{background:#4f8cff;color:#fff;display:none}
+#mobile{background:#4ecdc4;color:#0f1115;display:none}
+#ios{background:#4f8cff;color:#fff;display:none}
+#tip{font-size:12px;color:#6b7280;line-height:1.6}
+</style></head>
 <body>
-<div class="c">
+<div class="w">
 <h1 id="ico">📦</h1>
-<h2 id="title">物掌柜 StuffManage</h2>
-<p id="desc"></p>
-<a id="btn" href="#">安装物掌柜</a>
-<div class="tip" id="tip"></div>
+<h2>物掌柜 StuffManage</h2>
+<button id="macWin">点此安装到桌面</button>
+<button id="mobile">点此安装到桌面</button>
+<button id="ios">在 Safari 中打开并安装</button>
+<div id="tip"></div>
 </div>
 <script>
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
+
 var ua=navigator.userAgent;
-var os='';
-if(/iPhone|iPad/i.test(ua)) os='ios';
-else if(/Android/i.test(ua)) os='android';
-else if(/Mac/i.test(ua)) os='mac';
-else if(/Windows/i.test(ua)) os='win';
+var isIOS=/iPhone|iPad/i.test(ua);
+var isAndroid=/Android/i.test(ua);
+var isMac=/Mac/i.test(ua) && !isIOS;
+var isWin=/Windows/i.test(ua);
 
-var btn=document.getElementById('btn');
-var tip=document.getElementById('tip');
-
-if(os==='ios'){
+if(isIOS){
   document.getElementById('ico').textContent='📱';
-  btn.textContent='添加到主屏幕';
-  btn.href='index.html';
-  tip.innerHTML='用 Safari 打开 → 底部分享 ↑ → 添加到主屏幕';
-}else if(os==='android'){
-  document.getElementById('ico').textContent='🤖';
-  btn.textContent='安装到桌面';
-  btn.href='index.html';
-  tip.innerHTML='用 Chrome 打开 → 自动弹安装提示 → 桌面图标';
-}else if(os==='mac'){
-  document.getElementById('ico').textContent='💻';
-  btn.textContent='下载 Mac 桌面启动器';
-  btn.href='物掌柜.command';
-  btn.setAttribute('download','物掌柜.command');
-  tip.innerHTML='1. 点击下载文件<br>2. 双击运行 → 出现物掌柜窗口<br>3. 拖到桌面或程序坞<br>4. 以后双击图标就能打开 ✅';
-}else if(os==='win'){
-  document.getElementById('ico').textContent='🪟';
-  btn.textContent='下载 Windows 桌面启动器';
-  btn.href='物掌柜-Windows安装.bat';
-  btn.setAttribute('download','物掌柜-Windows安装.bat');
-  tip.innerHTML='1. 点击下载文件<br>2. 双击运行 → 出现物掌柜窗口<br>3. 右键 → 发送到桌面<br>4. 以后双击图标就能打开 ✅';
-}else{
-  btn.textContent='打开物掌柜';
-  btn.href='index.html';
+  document.getElementById('ios').style.display='block';
+  document.getElementById('ios').onclick=function(){location.reload();};
+  document.getElementById('tip').innerHTML='Safari 打开后：<br>底栏 ↑ 分享 → 添加到主屏幕';
+}else if(isAndroid||isMac||isWin){
+  document.getElementById('ico').textContent=isAndroid?'🤖':isMac?'💻':'🪟';
+  
+  // Desktop PWA install
+  var macWin=document.getElementById('macWin');
+  var mobile=document.getElementById('mobile');
+  var deferredPrompt=null;
+
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferredPrompt=e;
+    if(isAndroid){
+      mobile.style.display='block';
+      mobile.textContent='🤖 安装到桌面';
+      mobile.onclick=function(){
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(r){
+          if(r.outcome==='accepted'){mobile.textContent='✅ 安装完成！';mobile.style.background='#4ecdc4';document.getElementById('tip').innerHTML='桌面已出现物掌柜图标';}
+        });
+      };
+    }else{
+      macWin.style.display='block';
+      macWin.textContent='💻 安装到桌面';
+      macWin.onclick=function(){
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(r){
+          if(r.outcome==='accepted'){macWin.textContent='✅ 安装完成！';macWin.style.background='#4ecdc4';document.getElementById('tip').innerHTML='程序坞/桌面已出现物掌柜图标';}
+        });
+      };
+    }
+    document.getElementById('tip').innerHTML='点击上方按钮，系统弹出确认 → 点安装 → 完成';
+  });
+
+  // Fallback: if beforeinstallprompt doesn't fire within 8s, show manual instructions
+  setTimeout(function(){
+    if(!deferredPrompt){
+      if(isAndroid){
+        mobile.style.display='block';
+        mobile.textContent='🤖 打开物掌柜';
+        mobile.onclick=function(){location.href='index.html';};
+        document.getElementById('tip').innerHTML='Chrome 打开后右上角 ⋮ → 添加到主屏幕';
+      }else{
+        macWin.style.display='block';
+        macWin.textContent='💻 打开物掌柜';
+        macWin.onclick=function(){location.href='index.html';};
+        document.getElementById('tip').innerHTML='Chrome 打开后地址栏右侧 ⊕ 点击安装';
+      }
+    }
+  },8000);
 }
 </script>
 </body>
