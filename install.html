@@ -5,92 +5,55 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0f1115">
 <link rel="manifest" href="manifest.webmanifest">
-<title>物掌柜 · 安装向导</title>
+<title>物掌柜 · 安装</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
-.card{background:#1a1d28;border-radius:18px;padding:28px 20px;max-width:380px;width:100%;border:1px solid #2a2e3a;text-align:center}
-.card>h1{font-size:20px;margin-bottom:4px}
-.card>.sub{font-size:12px;color:#6b7280;margin-bottom:16px}
-.pick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0}
-.pick button{flex:1;min-width:72px;padding:14px 10px;border-radius:12px;border:1px solid #2a2e3a;background:#141826;color:#a0a8c0;font-size:14px;cursor:pointer;transition:.15s}
-.pick button.on{background:#4f8cff;color:#fff;border-color:#4f8cff}
-.step{background:#141826;border-radius:12px;padding:14px;margin:10px 0;text-align:left;border:1px solid #2a2e3a;display:flex;gap:10px;align-items:flex-start}
-.step .n{width:24px;height:24px;background:#4f8cff;color:#fff;border-radius:50%;text-align:center;line-height:24px;font-size:13px;font-weight:700;flex-shrink:0}
-.step .t{font-size:13px;font-weight:700;margin-bottom:2px}
-.step .d{font-size:11px;color:#a0a8c0;line-height:1.6}
-.btn{display:block;width:100%;padding:15px;font-size:16px;border:none;border-radius:12px;cursor:pointer;font-weight:700;margin-top:12px;text-align:center;text-decoration:none}
-.btn.blue{background:#4f8cff;color:#fff}
-.btn.gray{background:transparent;color:#a0a8c0;border:1px solid #2a2e3a}
-.hint{font-size:10px;color:#6b7280;margin-top:8px;line-height:1.5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.c{text-align:center;max-width:320px}
+.c h1{font-size:40px;margin-bottom:8px}
+.c h2{font-size:20px;margin-bottom:4px}
+.c p{font-size:13px;color:#a0a8c0;margin-bottom:20px;line-height:1.6}
+.c a{display:block;padding:18px;background:#4f8cff;color:#fff;border-radius:14px;font-size:18px;font-weight:700;text-decoration:none;margin-bottom:10px}
+.c .tip{font-size:11px;color:#6b7280;line-height:1.5}
+.c .alt{display:block;padding:12px;background:transparent;color:#a0a8c0;border:1px solid #2a2e3a;border-radius:12px;font-size:14px;text-decoration:none;margin-top:8px}
 </style>
 </head>
 <body>
-<div class="card">
-<h1>📦 物掌柜 · 安装向导</h1>
-<div class="sub">选择一个设备，30 秒完成安装</div>
-
-<div id="picker">
-<div class="pick">
-  <button onclick="guide('ios')">📱 iPhone</button>
-  <button onclick="guide('android')">🤖 安卓</button>
-  <button onclick="guide('mac')">💻 Mac</button>
-  <button onclick="guide('win')">🪟 Windows</button>
+<div class="c">
+<h1 id="ico">📦</h1>
+<h2 id="title">物掌柜 · 安装到桌面</h2>
+<p id="desc">家庭物品 · 资金 · 借贷 · 人情往来</p>
+<a id="mainBtn" href="index.html">打开物掌柜</a>
+<div class="tip" id="tip"></div>
+<a class="alt" href="index.html">直接进入（不安装）</a>
 </div>
-</div>
-
-<div id="steps"></div>
-<div id="btnArea"></div>
-
 <script>
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
-
+var os='';
 var ua=navigator.userAgent;
-var auto=null;
-if(/iPhone|iPad/i.test(ua)) auto='ios';
-else if(/Android/i.test(ua)) auto='android';
-else if(/Mac/i.test(ua)) auto='mac';
-else if(/Windows/i.test(ua)) auto='win';
-if(auto) guide(auto);
+if(/iPhone|iPad/i.test(ua)) os='ios';
+else if(/Android/i.test(ua)) os='android';
+else if(/Mac/i.test(ua)) os='mac';
+else if(/Windows/i.test(ua)) os='win';
 
-function guide(os){
-  var icons={ios:'📱',android:'🤖',mac:'💻',win:'🪟'};
-  var titles={ios:'iPhone · 添加到主屏幕',android:'安卓 · 安装到桌面',mac:'Mac · 安装到程序坞',win:'Windows · 安装到桌面'};
-  document.querySelector('.card>h1').textContent=titles[os];
-  document.querySelector('.sub').textContent=os==='ios'?'用 Safari 打开后按步骤操作':os==='android'?'用 Chrome 打开后按步骤操作':'用 Chrome/Edge 打开后按步骤操作';
-  document.getElementById('picker').style.display='none';
-
-  var s=document.getElementById('steps');
-  var b=document.getElementById('btnArea');
-
-  if(os==='ios'){
-    s.innerHTML=''+
-      '<div class="step"><div class="n">1</div><div><div class="t">用 Safari 打开</div><div class="d">点击下方蓝色按钮，在 Safari 中打开物掌柜首页。</div></div></div>'+
-      '<div class="step"><div class="n">2</div><div><div class="t">点击底栏分享按钮</div><div class="d">Safari 底部中间 ↑ 图标。</div></div></div>'+
-      '<div class="step"><div class="n">3</div><div><div class="t">添加到主屏幕</div><div class="d">滑动找到"添加到主屏幕" → 右上角"添加"。</div></div></div>';
-    b.innerHTML='<a class="btn blue" href="index.html">📱 在 Safari 中打开物掌柜</a><div class="hint">✅ 添加后桌面出现物掌柜图标，点击即可使用</div>';
-  }
-  else if(os==='android'){
-    s.innerHTML=''+
-      '<div class="step"><div class="n">1</div><div><div class="t">用 Chrome 打开</div><div class="d">点击下方蓝色按钮，在 Chrome 中打开物掌柜首页。</div></div></div>'+
-      '<div class="step"><div class="n">2</div><div><div class="t">等待安装提示弹窗</div><div class="d">Chrome 会自动弹出"添加到主屏幕"提示，点击"安装"。</div></div></div>'+
-      '<div class="step"><div class="n">3</div><div><div class="t">桌面出现应用图标</div><div class="d">如未弹窗，点 Chrome 右上 ⋮ → 添加到主屏幕。</div></div></div>';
-    b.innerHTML='<a class="btn blue" href="index.html">📱 在 Chrome 中打开物掌柜</a><div class="hint">✅ Chrome 自动弹安装提示，点击安装即可</div>';
-  }
-  else if(os==='mac'){
-    s.innerHTML=''+
-      '<div class="step"><div class="n">1</div><div><div class="t">用 Chrome 打开首页</div><div class="d">点击下方蓝色按钮，在 Chrome 中打开物掌柜首页。</div></div></div>'+
-      '<div class="step"><div class="n">2</div><div><div class="t">地址栏右侧找 ⊕ 图标</div><div class="d">等待 3~5 秒，Chrome 地址栏最右边会出现安装图标。</div></div></div>'+
-      '<div class="step"><div class="n">3</div><div><div class="t">点击 ⊕ → 程序坞出现图标</div><div class="d">独立窗口运行，和原生 App 一样使用。</div></div></div>';
-    b.innerHTML='<a class="btn blue" href="index.html">💻 打开物掌柜首页</a><div class="hint">✅ 打开后等 3 秒，地址栏右侧出现 ⊕，点它安装</div>';
-  }
-  else if(os==='win'){
-    s.innerHTML=''+
-      '<div class="step"><div class="n">1</div><div><div class="t">用 Chrome/Edge 打开首页</div><div class="d">点击下方蓝色按钮，在浏览器中打开物掌柜首页。</div></div></div>'+
-      '<div class="step"><div class="n">2</div><div><div class="t">地址栏右侧找 ⊕ 图标</div><div class="d">等待 3~5 秒，地址栏最右边出现安装图标。</div></div></div>'+
-      '<div class="step"><div class="n">3</div><div><div class="t">点击 ⊕ → 桌面出现图标</div><div class="d">从桌面图标打开，独立窗口使用。</div></div></div>';
-    b.innerHTML='<a class="btn blue" href="index.html">💻 打开物掌柜首页</a><div class="hint">✅ 打开后等 3 秒，地址栏右侧出现 ⊕，点它安装</div>';
-  }
+if(os==='ios'){
+  document.getElementById('ico').textContent='📱';
+  document.getElementById('mainBtn').textContent='添加到主屏幕';
+  document.getElementById('tip').innerHTML='① 点击上方按钮在 Safari 打开<br>② 点底部 ↑ 分享 → 添加到主屏幕<br>③ 桌面出现图标，完成 ✅';
+}else if(os==='android'){
+  document.getElementById('ico').textContent='🤖';
+  document.getElementById('mainBtn').textContent='安装到桌面';
+  document.getElementById('tip').innerHTML='① 点击上方按钮在 Chrome 打开<br>② Chrome 自动弹出安装提示<br>③ 桌面出现图标，完成 ✅';
+}else if(os==='mac'){
+  document.getElementById('ico').textContent='💻';
+  document.getElementById('mainBtn').textContent='安装到程序坞';
+  document.getElementById('tip').innerHTML='① 点击上方按钮在 Chrome 打开<br>② 等 3 秒，地址栏右侧出现 ⊕<br>③ 点击 ⊕ → 程序坞出现图标 ✅';
+}else if(os==='win'){
+  document.getElementById('ico').textContent='🪟';
+  document.getElementById('mainBtn').textContent='安装到桌面';
+  document.getElementById('tip').innerHTML='① 点击上方按钮在 Chrome 打开<br>② 等 3 秒，地址栏右侧出现 ⊕<br>③ 点击 ⊕ → 桌面出现图标 ✅';
+}else{
+  document.getElementById('tip').innerHTML='请用 Chrome / Safari / Edge 打开';
 }
 </script>
 </body>
