@@ -1755,7 +1755,7 @@
         <div id="favorRows">${rowHTML}</div>
         ${addRowBtn}
         <div class="modal-actions">
-          <button class="btn ghost" data-action="favor-add">收起</button>
+          <button class="btn ghost" data-action="favor-add">取消</button>
           <button class="btn" data-action="save-favor">保存</button>
         </div>
       </form></div>`;
@@ -2021,7 +2021,7 @@
         ${seg}
         <div class="summary">
           <div class="box" style="flex:0 0 auto"><div class="k">随礼笔数</div><div class="v">${total}</div></div>
-          <button class="btn" style="flex:0 0 auto;align-self:center" data-action="favor-add">➕ 添加随礼</button>
+          ${form ? '' : `<button class="btn" style="flex:0 0 auto;align-self:center" data-action="favor-add">➕ 添加随礼</button>`}
         </div>
         ${form}
         <div class="card">${view === 'person' ? favorByPersonHTML() : favorByEventHTML()}</div>`;
@@ -2960,8 +2960,9 @@ ${card('⚙️ 设置与备份','灵活配置，数据安全','shot_settings.png
       case 'commit-inventory-items': commitInventoryItems(); break;
       case 'commit-inventory-funds': commitInventoryFunds(); break;
       case 'favor-add':
-        if (state.favorAddOpen || state.editFavorId || state.favorRecipOf || state.favorRecipName) { state.favorAddOpen = false; state.editFavorId = ''; state.favorRecipOf = ''; state.favorRecipName = ''; }
-        else { state.favorAddOpen = true; }
+        if (state.favorAddOpen || state.editFavorId || state.favorRecipOf || state.favorRecipName) { state.favorAddOpen = false; state.editFavorId = ''; state.favorRecipOf = ''; state.favorRecipName = ''; render(); }
+        else { state.favorAddOpen = true; render(); }
+        break;
         closeModal(); render(); break;
       case 'favor-person-detail': favorPersonDetail(el.dataset.person); break;
       case 'favor-person-edit': personPhotoTemp = null; favorPersonEdit(el.dataset.person); break;
