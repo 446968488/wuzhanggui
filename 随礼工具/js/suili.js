@@ -13,8 +13,8 @@ function $(s){return document.querySelector(s)}
 function $$(s){return document.querySelectorAll(s)}
 
 var FAVOR_KINDS = {
-  give:{label:'我随礼',dir:-1,color:var(--danger)},
-  get:{label:'他人随礼',dir:1,color:var(--accent2)}
+  give:{label:'我随礼',dir:-1,color:'#ff5d6c'},
+  get:{label:'他人随礼',dir:1,color:'#4ecdc4'}
 };
 
 function toast(m){var t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1d28;color:#fff;padding:10px 24px;border-radius:10px;font-size:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeOut 2s forwards';document.body.appendChild(t);setTimeout(function(){t.remove()},2200)}
@@ -216,7 +216,7 @@ function favorByPersonHTML(){
 function favorEntryHTML(f){
   var k=FAVOR_KINDS[f.kind]||{label:f.kind,dir:0};
   var amt=Number(f.amount)||0;
-  var amtStr=amt>0?'<b style="color:'+(k.dir>0?'var(--accent2)':'var(--danger)')+'">'+(k.dir>0?'+':'-')+'¥'+fmt(amt)+'</b>':'';
+  var amtStr=amt>0?'<b style="color:'+(k.dir>0?'#4ecdc4':'#ff5d6c')+'">'+(k.dir>0?'+':'-')+'¥'+fmt(amt)+'</b>':'';
   return '<div class="recip-row"><span><b>'+esc(f.party||'')+'</b> · '+k.label+' · '+amtStr+(f.date?' · '+esc(f.date):'')+'</span>'+
     '<span class="row-ops"><button class="btn sm ghost" data-action="edit-favor" data-id="'+f.id+'">修改</button>'+
     '<button type="button" class="link-del sm" data-action="del-favor" data-id="'+f.id+'">删除</button></span></div>';
