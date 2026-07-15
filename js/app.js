@@ -151,6 +151,21 @@
     return '<div class="card" style="background:rgba(255,93,108,.08);border:1px solid rgba(255,93,108,.25);margin-bottom:10px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">⚠️</span><div style="flex:1;font-size:12px;line-height:1.6;color:#ff8e9e"><b>数据安全提醒</b><br>所有数据存在本机浏览器缓存中，<b>清除浏览器数据会丢失全部资料</b>。请前往「设置 → 一键备份」导出备份。</div><button class="btn sm" data-tab="settings">去备份 ›</button></div></div>';
   }
 
+  function bookmarkTip() {
+    // 已收藏就不再提示
+    if (localStorage.getItem('sm_bookmark_tip_hidden')) return '';
+    return `<div class="card" style="background:rgba(79,140,255,.06);border:1px solid rgba(79,140,255,.2);margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">⭐️</span>
+        <div style="flex:1;font-size:12px;line-height:1.6;color:#8cb8ff">
+          <b>收藏一下，这里就是你的随身小管家～</b><br>
+          手机点 <b>分享</b> 选择「<b>添加到主屏幕</b>」，电脑按 <b>⌘D</b> 收藏<br>
+          下次从桌面或书签打开，数据都在，继续用 👇
+        </div>
+        <button class="btn sm" onclick="localStorage.setItem('sm_bookmark_tip_hidden','1');this.closest('.card').remove()" style="background:transparent;color:#8cb8ff;border:1px solid rgba(79,140,255,.3);white-space:nowrap">知道了</button>
+      </div></div>`;
+  }
+
   // ================= 渲染入口 =================
   function render() {
     renderTabs();
@@ -371,7 +386,7 @@
         </div>
       </div>`;
 
-    return summaryHTML + warnClearCache() + funHTML + funcHTML + itemsHTML + fundsHTML + loansHTML + rewardHTML;
+    return summaryHTML + bookmarkTip() + warnClearCache() + funHTML + funcHTML + itemsHTML + fundsHTML + loansHTML + rewardHTML;
   }
 
   function itemCardHTML(it) {
