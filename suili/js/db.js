@@ -1,5 +1,5 @@
-// 本地存储层：IndexedDB 封装（物品 / 资金账户 / 借贷 / 盘点快照 / 出入库日志 / 资金日志 / 人情账 / 建议交流 / 设置）
-// 纯前端、无后端，数据存于本机浏览器。app=物掌柜(StuffManage)
+// 本地存储层：IndexedDB 封装
+// 纯前端、无后端，数据存于本机浏览器
 const DB = (function () {
   const DB_NAME = 'suiliji_v1';
   const DB_VERSION = 1;
@@ -53,3 +53,4 @@ const DB = (function () {
 
   return { open, put, getAll, del };
 })();
+window.DB = DB;
