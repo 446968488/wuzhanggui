@@ -1,96 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0f1115">
-<link rel="manifest" href="manifest.webmanifest">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1115"><link rel="manifest" href="manifest.webmanifest">
 <title>安装物掌柜</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
-.w{max-width:300px;text-align:center}
-.w h1{font-size:60px;margin-bottom:4px}
-.w h2{font-size:18px;margin-bottom:20px}
-.w button{display:block;width:100%;padding:18px;border-radius:14px;font-size:20px;font-weight:700;cursor:pointer;border:none;margin-bottom:12px}
-#macWin{background:#4f8cff;color:#fff;display:none}
-#mobile{background:#4ecdc4;color:#0f1115;display:none}
-#ios{background:#4f8cff;color:#fff;display:none}
-#tip{font-size:12px;color:#6b7280;line-height:1.6}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.c{text-align:center}
+.c h1{font-size:64px;margin-bottom:16px;animation:pulse 1.5s infinite}
+.c p{font-size:14px;color:#a0a8c0}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
 </style></head>
 <body>
-<div class="w">
-<h1 id="ico">📦</h1>
-<h2>物掌柜 StuffManage</h2>
-<button id="macWin">点此安装到桌面</button>
-<button id="mobile">点此安装到桌面</button>
-<button id="ios">在 Safari 中打开并安装</button>
-<div id="tip"></div>
-</div>
+<div class="c"><h1>📦</h1><p>正在安装物掌柜…</p></div>
 <script>
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
-
-var ua=navigator.userAgent;
-var isIOS=/iPhone|iPad/i.test(ua);
-var isAndroid=/Android/i.test(ua);
-var isMac=/Mac/i.test(ua) && !isIOS;
-var isWin=/Windows/i.test(ua);
-
-if(isIOS){
-  document.getElementById('ico').textContent='📱';
-  document.getElementById('ios').style.display='block';
-  document.getElementById('ios').onclick=function(){location.reload();};
-  document.getElementById('tip').innerHTML='Safari 打开后：<br>底栏 ↑ 分享 → 添加到主屏幕';
-}else if(isAndroid||isMac||isWin){
-  document.getElementById('ico').textContent=isAndroid?'🤖':isMac?'💻':'🪟';
-  
-  // Desktop PWA install
-  var macWin=document.getElementById('macWin');
-  var mobile=document.getElementById('mobile');
-  var deferredPrompt=null;
-
-  window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
-    deferredPrompt=e;
-    if(isAndroid){
-      mobile.style.display='block';
-      mobile.textContent='🤖 安装到桌面';
-      mobile.onclick=function(){
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function(r){
-          if(r.outcome==='accepted'){mobile.textContent='✅ 安装完成！';mobile.style.background='#4ecdc4';document.getElementById('tip').innerHTML='桌面已出现物掌柜图标';}
-        });
-      };
-    }else{
-      macWin.style.display='block';
-      macWin.textContent='💻 安装到桌面';
-      macWin.onclick=function(){
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function(r){
-          if(r.outcome==='accepted'){macWin.textContent='✅ 安装完成！';macWin.style.background='#4ecdc4';document.getElementById('tip').innerHTML='程序坞/桌面已出现物掌柜图标';}
-        });
-      };
-    }
-    document.getElementById('tip').innerHTML='点击上方按钮，系统弹出确认 → 点安装 → 完成';
-  });
-
-  // Fallback: if beforeinstallprompt doesn't fire within 8s, show manual instructions
-  setTimeout(function(){
-    if(!deferredPrompt){
-      if(isAndroid){
-        mobile.style.display='block';
-        mobile.textContent='🤖 打开物掌柜';
-        mobile.onclick=function(){location.href='index.html';};
-        document.getElementById('tip').innerHTML='Chrome 打开后右上角 ⋮ → 添加到主屏幕';
-      }else{
-        macWin.style.display='block';
-        macWin.textContent='💻 打开物掌柜';
-        macWin.onclick=function(){location.href='index.html';};
-        document.getElementById('tip').innerHTML='Chrome 打开后地址栏右侧 ⊕ 点击安装';
-      }
-    }
-  },8000);
-}
+setTimeout(function(){location.replace('index.html');},800);
 </script>
 </body>
 </html>
