@@ -1738,7 +1738,7 @@
     else if (recip) { party0 = recip.party || ''; }
     else if (recipName) { party0 = recipName; }
     const rowHTML = favorRowHTML({ party: party0, amount: amount0, accountId: acc0, recipOf: recipOf0 }, favorAccOpts(acc0), single);
-    const title = editing ? '✏️ 修改随礼' : (recip ? '🔁 回礼 · 我随礼给「' + (recip.party || '') + '」' : (recipName ? '🔁 回礼 · 我随礼给「' + recipName + '」' : '➕ 添加随礼'));
+    const title = editing ? '✏️ 修改随礼' : (recip || recipName ? '🔁 回礼 · 我随礼给「' + (recip ? recip.party : recipName) + '」' : '填写随礼信息');
     const addRowBtn = single ? '' : `<button type="button" class="btn ghost sm mt" data-action="favor-add-row">+ 加一行</button>`;
     return `<div class="card"><h3>${title}</h3>
       <form id="favorForm" data-edit="${editing ? editing.id : ''}" onsubmit="return false">
