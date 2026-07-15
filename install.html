@@ -3,114 +3,94 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.webmanifest">
 <title>物掌柜 · 安装向导</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#0f1115;color:#eef2fb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
 .card{background:#1a1d28;border-radius:18px;padding:28px 20px;max-width:380px;width:100%;border:1px solid #2a2e3a;text-align:center}
-.ico{font-size:56px;margin-bottom:8px}
-h1{font-size:20px;margin-bottom:4px}
-.sub{font-size:12px;color:#6b7280;margin-bottom:20px}
-.step{background:#141826;border-radius:12px;padding:14px;margin:10px 0;text-align:left;border:1px solid #2a2e3a}
-.step .num{display:inline-block;width:22px;height:22px;background:#4f8cff;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-right:8px;flex-shrink:0}
-.step .title{font-size:14px;font-weight:700;margin-bottom:4px}
-.step .desc{font-size:12px;color:#a0a8c0;line-height:1.6}
-.btn{display:block;width:100%;padding:14px;font-size:15px;border:none;border-radius:12px;cursor:pointer;font-weight:700;margin-top:12px}
+.card>h1{font-size:20px;margin-bottom:4px}
+.card>.sub{font-size:12px;color:#6b7280;margin-bottom:16px}
+.pick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.pick button{flex:1;min-width:72px;padding:14px 10px;border-radius:12px;border:1px solid #2a2e3a;background:#141826;color:#a0a8c0;font-size:14px;cursor:pointer;transition:.15s}
+.pick button.on{background:#4f8cff;color:#fff;border-color:#4f8cff}
+.step{background:#141826;border-radius:12px;padding:14px;margin:10px 0;text-align:left;border:1px solid #2a2e3a;display:flex;gap:10px;align-items:flex-start}
+.step .n{width:24px;height:24px;background:#4f8cff;color:#fff;border-radius:50%;text-align:center;line-height:24px;font-size:13px;font-weight:700;flex-shrink:0}
+.step .t{font-size:13px;font-weight:700;margin-bottom:2px}
+.step .d{font-size:11px;color:#a0a8c0;line-height:1.6}
+.btn{display:block;width:100%;padding:15px;font-size:16px;border:none;border-radius:12px;cursor:pointer;font-weight:700;margin-top:12px;text-align:center;text-decoration:none}
 .btn.blue{background:#4f8cff;color:#fff}
 .btn.gray{background:transparent;color:#a0a8c0;border:1px solid #2a2e3a}
-.btn.green{background:#4ecdc4;color:#0f1115}
-.sel{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0}
-.sel button{flex:1;min-width:70px;padding:12px 8px;border-radius:10px;border:1px solid #2a2e3a;background:#141826;color:#a0a8c0;font-size:13px;cursor:pointer;transition:.15s}
-.sel button.on{background:#4f8cff;color:#fff;border-color:#4f8cff}
+.hint{font-size:10px;color:#6b7280;margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
 <div class="card">
-<div class="ico" id="devIco">📦</div>
-<h1 id="devTitle">物掌柜 · 安装向导</h1>
-<div class="sub" id="devSub">选择你的设备开始安装</div>
+<h1>📦 物掌柜 · 安装向导</h1>
+<div class="sub">选择一个设备，30 秒完成安装</div>
 
 <div id="picker">
-<div class="sel" id="osPicker">
-  <button onclick="pickOS('ios')">📱 iPhone</button>
-  <button onclick="pickOS('android')">🤖 安卓</button>
-  <button onclick="pickOS('mac')">💻 Mac</button>
-  <button onclick="pickOS('win')">🪟 Windows</button>
+<div class="pick">
+  <button onclick="guide('ios')">📱 iPhone</button>
+  <button onclick="guide('android')">🤖 安卓</button>
+  <button onclick="guide('mac')">💻 Mac</button>
+  <button onclick="guide('win')">🪟 Windows</button>
 </div>
-<div class="hint" style="font-size:11px;color:#6b7280;margin-top:4px">👆 点击选择你的设备类型</div>
 </div>
 
-<div id="guide" style="display:none"></div>
+<div id="steps"></div>
+<div id="btnArea"></div>
 
-<div id="installArea" style="display:none;margin-top:16px">
-<button class="btn blue" id="doInstallBtn" style="display:none" onclick="doPWAInstall()">📥 安装到桌面</button>
-</div>
-</div>
 <script>
-var deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;document.getElementById('doInstallBtn').style.display='block';});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
 
-function doPWAInstall(){
-  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(r){if(r.outcome==='accepted'){document.getElementById('doInstallBtn').textContent='✅ 安装完成！';}deferredPrompt=null;});}
-}
+var ua=navigator.userAgent;
+var auto=null;
+if(/iPhone|iPad/i.test(ua)) auto='ios';
+else if(/Android/i.test(ua)) auto='android';
+else if(/Mac/i.test(ua)) auto='mac';
+else if(/Windows/i.test(ua)) auto='win';
+if(auto) guide(auto);
 
-function pickOS(os){
-  document.querySelectorAll('#osPicker button').forEach(b=>b.classList.remove('on'));
-  event.target.classList.add('on');
-  var g=document.getElementById('guide');
-  var ia=document.getElementById('installArea');
+function guide(os){
+  var icons={ios:'📱',android:'🤖',mac:'💻',win:'🪟'};
+  var titles={ios:'iPhone · 添加到主屏幕',android:'安卓 · 安装到桌面',mac:'Mac · 安装到程序坞',win:'Windows · 安装到桌面'};
+  document.querySelector('.card>h1').textContent=titles[os];
+  document.querySelector('.sub').textContent=os==='ios'?'用 Safari 打开后按步骤操作':os==='android'?'用 Chrome 打开后按步骤操作':'用 Chrome/Edge 打开后按步骤操作';
   document.getElementById('picker').style.display='none';
-  document.getElementById('devIco').textContent={ios:'📱',android:'🤖',mac:'💻',win:'🪟'}[os];
-  document.getElementById('devTitle').textContent={ios:'iPhone 安装',android:'安卓 安装',mac:'Mac 安装',win:'Windows 安装'}[os];
-  document.getElementById('devSub').textContent='按步骤操作，30秒完成';
-  ia.style.display='none';
+
+  var s=document.getElementById('steps');
+  var b=document.getElementById('btnArea');
 
   if(os==='ios'){
-    document.getElementById('doInstallBtn').style.display='none';
-    g.style.display='block';
-    g.innerHTML=
-      '<div class="step"><span class="num">1</span><span class="title">用 Safari 打开</span><div class="desc">必须用 Safari 浏览器。如果当前不是，点击下方按钮复制链接。</div></div>'+
-      '<div class="step"><span class="num">2</span><span class="title">点击底栏分享按钮</span><div class="desc">Safari 底部中间「↑」分享图标。</div></div>'+
-      '<div class="step"><span class="num">3</span><span class="title">添加到主屏幕</span><div class="desc">滑动找到「添加到主屏幕」→ 点击右上角「添加」→ 桌面出现物掌柜图标。</div></div>'+
-      '<button class="btn gray" onclick="copyURL()">📋 复制安装链接</button>'+
-      '<div class="hint" style="font-size:10px;color:#6b7280;margin-top:8px">或在 Safari 中打开此页面后自动引导</div>';
-  }else if(os==='android'){
-    document.getElementById('doInstallBtn').style.display='block';
-    document.getElementById('doInstallBtn').textContent='📥 安装到桌面';
-    g.style.display='block';
-    g.innerHTML=
-      '<div class="step"><span class="num">1</span><span class="title">在 Chrome 中打开</span><div class="desc">必须用 Chrome 浏览器。如果当前不是，点击下方按钮复制链接。</div></div>'+
-      '<div class="step"><span class="num">2</span><span class="title">点击上方蓝色安装按钮</span><div class="desc">或者 Chrome 右上角「⋮」→「添加到主屏幕」</div></div>'+
-      '<div class="step"><span class="num">3</span><span class="title">桌面出现物掌柜图标</span><div class="desc">从桌面图标打开，像原生 App 一样使用。</div></div>'+
-      '<button class="btn gray" onclick="copyURL()">📋 复制安装链接</button>';
-    ia.style.display='block';
-  }else if(os==='mac'){
-    document.getElementById('doInstallBtn').style.display='block';
-    document.getElementById('doInstallBtn').textContent='📥 安装 PWA 到桌面';
-    g.style.display='block';
-    g.innerHTML=
-      '<div class="step"><span class="num">1</span><span class="title">在 Chrome 或 Edge 中打开</span><div class="desc">必须用 Chrome / Edge。点击下方按钮复制链接发给 Mac。</div></div>'+
-      '<div class="step"><span class="num">2</span><span class="title">点击上方蓝色安装按钮</span><div class="desc">浏览器地址栏右侧也默认显示安装图标 ⊕。</div></div>'+
-      '<div class="step"><span class="num">3</span><span class="title">桌面出现物掌柜图标</span><div class="desc">从桌面 / 启动台打开，窗口模式运行。</div></div>'+
-      '<button class="btn gray" onclick="copyURL()">📋 复制安装链接</button>';
-    ia.style.display='block';
-  }else if(os==='win'){
-    document.getElementById('doInstallBtn').style.display='block';
-    document.getElementById('doInstallBtn').textContent='📥 安装 PWA 到桌面';
-    g.style.display='block';
-    g.innerHTML=
-      '<div class="step"><span class="num">1</span><span class="title">在 Chrome 或 Edge 中打开</span><div class="desc">必须用 Chrome / Edge。</div></div>'+
-      '<div class="step"><span class="num">2</span><span class="title">点击上方蓝色安装按钮</span><div class="desc">或浏览器地址栏右侧的安装图标 ⊕。</div></div>'+
-      '<div class="step"><span class="num">3</span><span class="title">桌面出现物掌柜快捷方式</span><div class="desc">从桌面图标打开，像原生程序一样使用。</div></div>'+
-      '<button class="btn gray" onclick="copyURL()">📋 复制安装链接</button>';
-    ia.style.display='block';
+    s.innerHTML=''+
+      '<div class="step"><div class="n">1</div><div><div class="t">用 Safari 打开</div><div class="d">点击下方蓝色按钮，在 Safari 中打开物掌柜首页。</div></div></div>'+
+      '<div class="step"><div class="n">2</div><div><div class="t">点击底栏分享按钮</div><div class="d">Safari 底部中间 ↑ 图标。</div></div></div>'+
+      '<div class="step"><div class="n">3</div><div><div class="t">添加到主屏幕</div><div class="d">滑动找到"添加到主屏幕" → 右上角"添加"。</div></div></div>';
+    b.innerHTML='<a class="btn blue" href="index.html">📱 在 Safari 中打开物掌柜</a><div class="hint">✅ 添加后桌面出现物掌柜图标，点击即可使用</div>';
   }
-}
-
-function copyURL(){
-  var link='https://446968488.github.io/wuzhanggui/install.html';
-  if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){alert('链接已复制！发给对方即可');});}
-  else{prompt('复制此链接发给对方：',link);}
+  else if(os==='android'){
+    s.innerHTML=''+
+      '<div class="step"><div class="n">1</div><div><div class="t">用 Chrome 打开</div><div class="d">点击下方蓝色按钮，在 Chrome 中打开物掌柜首页。</div></div></div>'+
+      '<div class="step"><div class="n">2</div><div><div class="t">等待安装提示弹窗</div><div class="d">Chrome 会自动弹出"添加到主屏幕"提示，点击"安装"。</div></div></div>'+
+      '<div class="step"><div class="n">3</div><div><div class="t">桌面出现应用图标</div><div class="d">如未弹窗，点 Chrome 右上 ⋮ → 添加到主屏幕。</div></div></div>';
+    b.innerHTML='<a class="btn blue" href="index.html">📱 在 Chrome 中打开物掌柜</a><div class="hint">✅ Chrome 自动弹安装提示，点击安装即可</div>';
+  }
+  else if(os==='mac'){
+    s.innerHTML=''+
+      '<div class="step"><div class="n">1</div><div><div class="t">用 Chrome 打开首页</div><div class="d">点击下方蓝色按钮，在 Chrome 中打开物掌柜首页。</div></div></div>'+
+      '<div class="step"><div class="n">2</div><div><div class="t">地址栏右侧找 ⊕ 图标</div><div class="d">等待 3~5 秒，Chrome 地址栏最右边会出现安装图标。</div></div></div>'+
+      '<div class="step"><div class="n">3</div><div><div class="t">点击 ⊕ → 程序坞出现图标</div><div class="d">独立窗口运行，和原生 App 一样使用。</div></div></div>';
+    b.innerHTML='<a class="btn blue" href="index.html">💻 打开物掌柜首页</a><div class="hint">✅ 打开后等 3 秒，地址栏右侧出现 ⊕，点它安装</div>';
+  }
+  else if(os==='win'){
+    s.innerHTML=''+
+      '<div class="step"><div class="n">1</div><div><div class="t">用 Chrome/Edge 打开首页</div><div class="d">点击下方蓝色按钮，在浏览器中打开物掌柜首页。</div></div></div>'+
+      '<div class="step"><div class="n">2</div><div><div class="t">地址栏右侧找 ⊕ 图标</div><div class="d">等待 3~5 秒，地址栏最右边出现安装图标。</div></div></div>'+
+      '<div class="step"><div class="n">3</div><div><div class="t">点击 ⊕ → 桌面出现图标</div><div class="d">从桌面图标打开，独立窗口使用。</div></div></div>';
+    b.innerHTML='<a class="btn blue" href="index.html">💻 打开物掌柜首页</a><div class="hint">✅ 打开后等 3 秒，地址栏右侧出现 ⊕，点它安装</div>';
+  }
 }
 </script>
 </body>
