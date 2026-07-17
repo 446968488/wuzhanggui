@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <script src="lib/qrcode.min.js"></script>
-<title>校园铃</title>
+<title>作息节奏提醒</title>
 <style>
   :root{
     --bg:#0b0d12;
@@ -702,8 +702,10 @@
       if(idx<0){
         if(now<realStart){ // 还没到开始时间 → 等待，到钟点自动提示（之前已过的节次不补提示）
           state.phase="waiting"; state.waitEnd=realStart; state.waitTotal=Math.round((realStart-now)/1000);
-        } else { // 已过今日最后一节 → 今日结束
-          finishDay(); return;
+        } else { // 已过今日最后一节 → 自动降级为"从当前时间开始"模拟整日
+          state.bnd=getBoundaries(sch, now); state.phase="running"; state.index=0;
+          state.running=true; state.paused=false; state.timer=setInterval(tick,1000);
+          tick(); renderScheduleList(); saveSession(); return;
         }
       } else { state.phase="running"; state.index=idx; } // 下午打开直接落在下午节次
       state.bnd=bnd;
@@ -1371,7 +1373,7 @@
   }
 
   // ---------- 事件绑定 ----------
-  el.modeSelect.onchange=function(){ currentId=el.modeSelect.value; localStorage.setItem(LS_SEL,currentId); reset(); start(); if(state.phase==="done"){ reset(); var _sch=getCurrent(); state.bnd=getBoundaries(_sch,new Date()); state.phase="running"; state.index=0; state.running=true; tick(); state.timer=setInterval(tick,1000); renderScheduleList(); saveSession(); } resetIdle(); };
+  el.modeSelect.onchange=function(){ currentId=el.modeSelect.value; localStorage.setItem(LS_SEL,currentId); reset(); start(); resetIdle(); };
   el.editBtn.onclick=function(){ openEditor(getCurrent(),false); };
   el.newBtn.onclick=function(e){ e.stopPropagation(); el.newMenu.classList.toggle("show"); };
   el.newModeBtn.onclick=function(){ el.newMenu.classList.remove("show"); openEditor({id:"",name:"我的作息",start:"08:00",periods:[{name:"专注",type:"focus",min:40},{name:"休息",type:"break",min:10}]},true); editing._isNew=true; };
@@ -1498,11 +1500,10 @@
       currentId=s.scheduleId;
       renderModes();
       start();
-      if(state.phase==="done"){ reset(); var _sch=getCurrent(); state.bnd=getBoundaries(_sch,new Date()); state.phase="running"; state.index=0; state.running=true; tick(); state.timer=setInterval(tick,1000); renderScheduleList(); saveSession(); }
     }
   })();
-  // 未运行则自动以当前模式开始（选好模式即自动运行）；若今日已结束自动回退为"当前时间开始"
-  if(!state.running){ start(); if(state.phase==="done"){ reset(); var _sch=getCurrent(); state.bnd=getBoundaries(_sch,new Date()); state.phase="running"; state.index=0; state.running=true; tick(); state.timer=setInterval(tick,1000); renderScheduleList(); saveSession(); } }
+  // 未运行则自动以当前模式开始；若今日已过 start() 内部自动降级为模拟整日
+  if(!state.running){ start(); }
   renderModes(); renderScheduleList(); updateClockUI(); updateAOD();
   tickStatusBar(); setInterval(tickStatusBar, 1000);
   // 5 秒无操作 → 自动息屏（锁屏）
