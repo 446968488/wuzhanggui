@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#05060a" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<script src="lib/qrcode.min.js"></script>
+<title>校园铃</title>
+<style>
+  :root{
+    --bg:#0b0d12;
+    --panel:rgba(30,33,42,.72);
+    --panel2:rgba(40,44,55,.55);
+    --line:rgba(255,255,255,.10);
+    --txt:#f3f4f7;
+    --sub:#9aa0ad;
+    --class:#FFCC00;
+    --break:#34C759;
+    --lunch:#34C759;
+    --accent:#FFCC00;
+    --danger:#FF453A;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+    background:#05060a;color:var(--txt);min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;}
+  .wrap{width:100%;max-width:100%;padding:0 12px;margin:0 auto;position:relative;z-index:2;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;font-size:clamp(15px,4.2vw,19px);font-weight:700;letter-spacing:.3px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--class);}
+  .modes{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;}
+  #modeSelect{flex:1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  select,button{font-family:inherit;font-size:14px;border-radius:11px;border:1px solid var(--line);
+    background:rgba(255,255,255,.06);color:var(--txt);padding:8px 13px;cursor:pointer;transition:.15s;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}
+  select:hover,button:hover{border-color:rgba(255,255,255,.22);}
+  button.primary{background:var(--class);border-color:var(--class);color:#fff;font-weight:600;}
+  button.primary:hover{filter:brightness(1.05);}
+  button.ghost{background:transparent;border-color:transparent;color:var(--sub);}
+  button.ghost:hover{color:var(--txt);background:rgba(255,255,255,.08);}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;
+    -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);box-shadow:0 1px 2px rgba(0,0,0,.3);}
+  .clock{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .ring-wrap{position:relative;width:min(230px,70vw);height:auto;aspect-ratio:1/1;}
+  .ring-wrap svg{width:100%;height:100%;display:block;transform:rotate(-90deg);}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,.10);stroke-width:14;}
+  .ring-fg{fill:none;stroke:var(--class);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .5s linear,stroke .4s;}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .time{font-size:clamp(36px,12vw,54px);font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums;color:var(--txt);}
+  .badge{font-size:13px;font-weight:600;padding:3px 12px;border-radius:999px;margin-top:4px;}
+  .badge.focus{background:rgba(255,149,0,.18);color:#ffb454;}
+  .badge.break{background:rgba(52,199,89,.18);color:#5dd879;}
+  .badge.lunch{background:rgba(52,199,89,.18);color:#5dd879;}
+  .period-name{font-size:18px;font-weight:600;margin-top:2px;color:var(--txt);}
+  .next{color:var(--sub);font-size:13px;margin-top:6px;}
+  .controls{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;}
+  .controls button{min-width:96px;}
+  .toggle{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:13px;margin-top:14px;justify-content:center;}
+  .toggle input{accent-color:var(--class);width:16px;height:16px;}
+  .note-box{margin-top:14px;}
+  .note-box textarea{width:100%;min-height:72px;resize:vertical;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--txt);font-family:inherit;font-size:14px;line-height:1.5;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  .note-box textarea:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,.09);}
+  .schedule-list{display:flex;flex-direction:column;gap:8px;}
+  .sch-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--panel);
+    border-radius:12px;border:1px solid var(--line);}
+  .sch-row.active{border-color:var(--class);background:rgba(255,204,0,.12);}
+  .sch-row .idx{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;
+    align-items:center;justify-content:center;font-size:12px;color:var(--sub);flex-shrink:0;}
+  .sch-row .nm{flex:1;font-weight:600;color:var(--txt);}
+  .sch-row .ty{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;}
+  .ty.focus{background:rgba(255,149,0,.18);color:#ffb454;}
+  .ty.break{background:rgba(52,199,89,.18);color:#5dd879;}
+  .ty.lunch{background:rgba(52,199,89,.18);color:#5dd879;}
+  .sch-row .dur{color:var(--sub);font-size:13px;font-variant-numeric:tabular-nums;}
+  .section-title{font-size:13px;color:var(--sub);margin:0 0 12px;font-weight:600;letter-spacing:.5px;}
+  .alert-opts{display:flex;gap:10px;flex-wrap:wrap;}
+  .alert-opt{display:inline-flex;align-items:center;gap:7px;font-size:13px;padding:8px 12px;
+    background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:11px;cursor:pointer;color:var(--txt);}
+  .alert-opt input{accent-color:var(--class);width:16px;height:16px;}
+  .sound-pick{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+  .sp-row{display:flex;align-items:center;gap:10px;}
+  .sp-label{font-size:13px;color:var(--sub);min-width:74px;}
+  .sound-pick select{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:8px 10px;font-size:13px;}
+  .modal{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;
+    justify-content:center;padding:18px;z-index:25;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  .modal.open{display:flex;}
+  .modal-box{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:rgba(28,31,40,.94);
+    border:1px solid var(--line);border-radius:20px;padding:18px;
+    -webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);}
+  .modal-box h3{margin:0 0 16px;font-size:18px;font-weight:700;}
+  .ed-row{display:grid;grid-template-columns:1fr 96px 86px 36px;gap:8px;margin-bottom:8px;align-items:center;}
+  .ed-row .field{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .ed-row .field .cap{font-size:11px;color:var(--sub);padding-left:2px;}
+  .ed-row input{border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .ed-row select{border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .ed-row .del{background:transparent;border:none;color:var(--danger);font-size:18px;cursor:pointer;}
+  .ed-sound-row{display:flex;gap:12px;margin:12px 0;}
+  .ed-sound{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .ed-sound label{font-size:12px;color:var(--sub);}
+  .ed-sound select{border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .ed-action{display:flex;gap:8px;align-items:center;margin:-2px 0 12px;flex-wrap:wrap;}
+  .ed-action label{font-size:12px;color:var(--sub);white-space:nowrap;}
+  .ed-action select{border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .ed-action .pmedia{flex:1;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .ed-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .ed-speech{margin:4px 0 12px;}
+  .ed-speech label{display:block;font-size:12px;color:var(--sub);margin-bottom:5px;line-height:1.4;}
+  .ed-speech input{width:100%;box-sizing:border-box;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .hint{color:var(--sub);font-size:12px;margin-top:8px;line-height:1.5;}
+  .tts-box{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;}
+  .tts-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .tts-row span{font-size:13px;color:var(--sub);min-width:84px;}
+  .tts-row input{flex:1;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .bg-fab{position:absolute;right:14px;bottom:30px;z-index:8;width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:none;background:transparent;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--sub);cursor:grab;touch-action:none;box-shadow:none;transition:color .2s,background .2s;}
+  .bg-fab:hover{background:rgba(255,255,255,.08);}
+  .bg-fab .note{width:24px;height:24px;display:block;}
+  .bg-fab .note .beam{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .bg-fab .note .head{fill:currentColor;}
+  .bg-fab .note .slash{stroke:var(--danger);stroke-width:1.9;stroke-linecap:round;opacity:1;transition:opacity .2s;}
+  .bg-fab.on{color:#F5C518;background:rgba(245,197,24,.16);}   /* 播放时金色 */
+  .bg-fab.on .note .slash{opacity:0;}
+  .bg-fab.on::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid #F5C518;animation:bgRing 1.6s ease-out infinite;opacity:0;pointer-events:none;}
+  @keyframes bgRing{0%{transform:scale(.92);opacity:.5;}100%{transform:scale(1.22);opacity:0;}}
+  .bg-fab.on .note{animation:bgNote 1.6s ease-in-out infinite;transform-origin:center;}
+  @keyframes bgNote{0%,100%{transform:scale(1);}50%{transform:scale(1.12) rotate(-5deg);}}
+  .bg-fab .spark{position:absolute;left:52%;top:40%;font-size:12px;line-height:1;color:#F5C518;opacity:0;pointer-events:none;}
+  .bg-fab.on .spark.s1{animation:bgFloat 1.9s ease-out infinite;}
+  .bg-fab.on .spark.s2{animation:bgFloat 1.9s ease-out infinite;animation-delay:.95s;left:60%;}
+  @keyframes bgFloat{0%{opacity:0;transform:translate(-50%,0) scale(.8);}25%{opacity:.85;}100%{opacity:0;transform:translate(-50%,-17px) scale(1.1);}}
+  .set-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .set-row > label{min-width:118px;color:var(--sub);font-size:13px;}
+  .set-row select,.set-row input{flex:1;min-width:160px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px;}
+  .set-hint{color:var(--sub);font-size:12px;margin-top:2px;line-height:1.55;}
+  .overlay{position:absolute;inset:0;background:rgba(11,13,18,.92);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;z-index:30;text-align:center;padding:24px;
+    -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);}
+  .overlay.show{display:flex;}
+  .overlay .big{font-size:40px;font-weight:800;color:var(--break);}
+  .overlay .sub2{color:#5dd879;font-size:16px;font-weight:600;}
+  .overlay .mini{color:var(--sub);font-size:14px;}
+  .ov-media{width:100%;display:flex;justify-content:center;}
+  .ov-media audio,.ov-media iframe{max-width:100%;}
+  .ov-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .ov-btn{background:var(--break);color:#04210f;border:none;padding:12px 22px;border-radius:999px;font-weight:700;font-size:15px;cursor:pointer;}
+  .ov-btn.ghost{background:transparent;border:1px solid var(--break);color:var(--break);}
+  footer{color:var(--sub);font-size:12px;text-align:center;margin-top:8px;}
+  /* ===== 手机模拟器外框（横屏） ===== */
+  .desk{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(130% 120% at 50% 25%,#10131b 0%,#05060a 72%);padding:18px;}
+  .phone{position:relative;height:min(90vh,900px);aspect-ratio:9/19.5;max-width:94vw;
+    background:linear-gradient(160deg,#23252e,#0a0b0f);border-radius:48px;padding:12px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.06) inset,0 0 0 11px #040406;
+    transition:width .35s cubic-bezier(.4,0,.2,1),height .35s cubic-bezier(.4,0,.2,1),max-width .35s,border-radius .35s,padding .35s;cursor:default;}
+  .phone.max{height:100vh;width:auto;max-width:none;max-height:none;aspect-ratio:9/19.5;border-radius:0;padding:0;box-shadow:none;}
+  .screen{position:relative;width:100%;height:100%;background:#000;border-radius:34px;overflow:hidden;
+    box-shadow:0 0 0 2px rgba(0,0,0,.9) inset;}
+  .phone.max .screen{border-radius:0;}
+  #bgLayer{position:absolute;inset:0;background-size:100% 100%;background-position:center;background-repeat:no-repeat;z-index:0;}
+  #bgTint{position:absolute;inset:0;background:rgba(11,13,18,.72);z-index:0;pointer-events:none;}
+  .phone.locked #bgTint{background:rgba(11,13,18,.30);}
+  /* 状态栏（横屏在长边顶部） */
+  .statusbar{position:absolute;top:0;left:0;right:0;height:32px;z-index:7;display:flex;align-items:center;
+    justify-content:space-between;padding:0 24px;color:#fff;font-size:12px;font-weight:600;
+    pointer-events:none;font-variant-numeric:tabular-nums;letter-spacing:.3px;text-shadow:0 1px 3px rgba(0,0,0,.55);}
+  .statusbar .sb-right{display:flex;align-items:center;gap:8px;}
+  .statusbar .sb-sig,.statusbar .sb-net{opacity:.92;font-size:11px;letter-spacing:.5px;}
+  .statusbar .sb-batt{width:22px;height:11px;border:1.5px solid rgba(255,255,255,.85);border-radius:3px;position:relative;padding:1.5px;box-sizing:border-box;}
+  .statusbar .sb-batt::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:5px;background:rgba(255,255,255,.85);border-radius:1px;}
+  .statusbar .sb-batt i{display:block;height:100%;width:78%;background:#34C759;border-radius:1px;}
+  .dyn-island{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:90px;height:20px;
+    background:#000;border-radius:999px;z-index:8;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.7);}
+  /* 屏幕内容滚动区（单栏居中，横屏留两侧） */
+  .screen-scroll{position:absolute;top:32px;left:0;right:0;bottom:20px;overflow-y:auto;overflow-x:hidden;
+    padding:14px 18px 18px;-webkit-overflow-scrolling:touch;z-index:2;}
+  .screen-scroll::-webkit-scrollbar{width:6px;}
+  .screen-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px;}
+  .phone.locked .screen-scroll{filter:brightness(.35) saturate(.7);}
+  /* Home 指示条 */
+  .homebar{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:120px;height:4px;
+    border-radius:999px;background:rgba(255,255,255,.55);z-index:7;cursor:pointer;}
+  /* 息屏 / 锁屏 AOD */
+  .aod{position:absolute;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:rgba(0,0,0,.86);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;cursor:pointer;text-align:center;padding:20px;}
+  .phone.locked .aod{display:flex;}
+  .aod-time{font-size:62px;font-weight:300;letter-spacing:1px;font-variant-numeric:tabular-nums;line-height:1;}
+  .aod-date{font-size:13px;color:rgba(255,255,255,.6);}
+  .aod-alarm{font-size:13px;color:rgba(255,255,255,.7);margin-top:8px;}
+  .aod-hint{font-size:11px;color:rgba(255,255,255,.35);margin-top:12px;}
+  /* 闹钟行 - 单行紧凑布局 */
+  .alarm-row{display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;flex-wrap:nowrap;}
+  .alarm-row .ar-time{font-size:clamp(16px,4.5vw,20px);font-weight:300;color:var(--txt);background:transparent;border:none;font-family:inherit;letter-spacing:.3px;width:60px;min-width:0;padding:0;line-height:1;flex-shrink:0;}
+  .alarm-row .ar-time::-webkit-calendar-picker-indicator{display:none;}
+  .alarm-row .ar-switch{margin-left:auto;flex-shrink:0;}
+  /* 小号 iOS 绿色开关 — 闹钟专用 */
+  .ac-switch.sm{width:38px;height:24px;}
+  .ac-switch.sm .ac-track{border-radius:12px;}
+  .ac-switch.sm .ac-track:before{width:20px;height:20px;left:2px;top:2px;}
+  .ac-switch.sm input:checked + .ac-track:before{transform:translateX(14px);}
+  .ac-switch{position:relative;display:inline-block;width:51px;height:31px;cursor:pointer;}
+  .ac-switch input{position:absolute;opacity:0;width:0;height:0;}
+  .ac-track{position:absolute;inset:0;background:rgba(255,255,255,.18);border-radius:999px;transition:background .25s;}
+  .ac-track:before{content:"";position:absolute;width:27px;height:27px;left:2px;top:2px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .ac-switch input:checked + .ac-track{background:var(--break);}
+  .ac-switch input:checked + .ac-track:before{transform:translateX(20px);}
+  #alarmList{display:flex;flex-direction:column;gap:10px;}
+  #alarmList .hint{color:var(--sub);font-size:14px;padding:10px 4px;}
+  .alarm-add{margin-top:10px;}
+  .new-wrap{position:relative;}
+  .new-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;min-width:150px;background:rgba(28,31,40,.96);border:1px solid var(--line);border-radius:12px;padding:6px;flex-direction:column;gap:4px;z-index:50;box-shadow:0 12px 34px rgba(0,0,0,.5);}
+  .new-menu.show{display:flex;}
+  .new-menu-item{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--txt);padding:10px 12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;white-space:nowrap;}
+  #newBtn{color:var(--txt);font-size:24px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;border:none;padding:4px;transition:color .15s,transform .1s;flex:0 0 auto;}
+  #newBtn:hover{color:var(--accent);background:transparent;}
+  #newBtn:active{transform:scale(.94);}
+  .icon-btn{background:transparent;border:none;color:var(--sub);width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:color .15s,background .15s;flex:0 0 auto;}
+  .icon-btn:hover{color:var(--accent);background:rgba(255,255,255,.06);}
+  .icon-btn .pencil{width:20px;height:20px;}
+  .new-menu-item:hover{background:rgba(255,255,255,.08);}
+  .overlay.alarm-ov{background:rgba(11,13,18,.94);}
+  .overlay.alarm-ov .big{color:var(--accent);}
+  .alarm-tip{color:var(--sub);font-size:14px;}
+  .brand-group{display:flex;align-items:center;gap:10px;}
+  .gear{width:22px;height:22px;display:block;transition:transform .35s ease;}
+  .gear-inline{width:18px;height:18px;margin-right:7px;vertical-align:-4px;}
+  .settings-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+  .settings-head .section-title{margin:0;display:flex;align-items:center;}
+  .collapse-arrow{color:var(--sub);font-size:14px;transition:transform .2s;margin-left:auto;}
+  .settings-card.collapsed .settings-body{display:none;}
+  .settings-card.collapsed .collapse-arrow{transform:rotate(-90deg);}
+  .sub-title{font-size:14px;font-weight:700;color:var(--txt);margin:16px 0 8px;}
+  .sub-title:first-child{margin-top:4px;}
+</style>
+</head>
+<body>
+  <div class="desk">
+    <div class="phone" id="phone">
+      <div class="screen" id="screen">
+        <div id="bgLayer"></div>
+        <div id="bgTint"></div>
+        <div class="statusbar">
+          <span class="sb-time" id="sbTime">--:--</span>
+          <div class="sb-right">
+            <span class="sb-sig" title="信号">▂▄▆█</span>
+            <span class="sb-net" title="网络">5G</span>
+            <span class="sb-batt"><i></i></span>
+          </div>
+        </div>
+        <div class="dyn-island"></div>
+        <div class="screen-scroll">
+          <div class="wrap">
+  <header>
+    <div class="brand-group">
+      <div class="brand"><span class="dot"></span>作息节奏提醒</div>
+    </div>
+    <div class="modes">
+      <select id="modeSelect" title="切换作息模式"></select>
+      <button class="icon-btn" id="editBtn" title="编辑当前" aria-label="编辑当前">
+        <svg class="pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+      </button>
+      <div class="new-wrap">
+        <button class="ghost" id="newBtn">+</button>
+        <div class="new-menu" id="newMenu">
+          <button class="new-menu-item" id="newModeBtn">模式</button>
+          <button class="new-menu-item" id="newAlarmBtn">闹钟</button>
+        </div>
+      <button class="icon-btn" id="shareBtn" title="分享二维码" aria-label="分享">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="card clock clock-card">
+    <div class="ring-wrap">
+      <svg width="230" height="230">
+        <circle class="ring-bg" cx="115" cy="115" r="100"></circle>
+        <circle class="ring-fg" id="ring" cx="115" cy="115" r="100"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="time" id="time">--:--</div>
+        <div class="badge" id="badge">未开始</div>
+        <div class="period-name" id="periodName">选择模式后开始</div>
+      </div>
+    </div>
+    <div class="next" id="nextInfo"></div>
+    <div class="note-box">
+      <textarea id="userNote" placeholder="随手记点什么…"></textarea>
+    </div>
+    <p class="hint" style="text-align:center">选择模式即自动开始 · 5 秒无操作自动锁屏息屏</p>
+  </div>
+
+  <div class="card settings-card collapsed" id="scheduleCard">
+    <div class="settings-head" id="scheduleHead">
+      <p class="section-title">本模式安排</p>
+      <span class="collapse-arrow">▾</span>
+    </div>
+    <div class="settings-body">
+      <div class="schedule-list" id="scheduleList"></div>
+    </div>
+  </div>
+
+  <audio id="bgAudio" loop style="display:none"></audio>
+
+  <div class="card settings-card collapsed" id="settingsCard">
+    <div class="settings-head" id="settingsHead">
+      <p class="section-title"><svg class="gear gear-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 设置</p>
+      <span class="collapse-arrow" id="settingsArrow">▾</span>
+    </div>
+    <div class="settings-body" id="settingsBody">
+      <p class="sub-title">背景音乐</p>
+      <div class="set-row">
+        <label>音乐来源</label>
+        <select id="bgSource">
+          <option value="lofi">🎧 Lo-fi 慵懒（内置真实音乐）</option>
+          <option value="piano">🎹 柔和钢琴（内置真实音乐）</option>
+          <option value="rain">🌧 自然雨声（内置真实录音）</option>
+          <option value="net">网络音乐地址</option>
+          <option value="local">本地音乐文件</option>
+        </select>
+      </div>
+      <div class="set-row" id="bgUrlRow" style="display:none">
+        <label>音乐地址</label>
+        <input id="bgUrl" placeholder="网络链接或本地路径，如 https://x.com/a.mp3 或 /Users/you/a.mp3" />
+      </div>
+      <p class="set-hint">首页音符按钮可随时播放 / 暂停。背景音乐与「到点休息音乐」相互独立。</p>
+      <p class="sub-title">背景图</p>
+      <div class="set-row">
+        <label>选择背景图</label>
+        <select id="bgImgSel"></select>
+      </div>
+      <div class="set-row">
+        <label>上传我的图</label>
+        <input type="file" id="bgImgFile" accept="image/*" />
+      </div>
+      <p class="set-hint">最小化后整页铺此图（拉伸铺满），右下角漂浮球显示倒计时、点击还原。上传的图会保存在本机、可在下拉里再次选择。</p>
+    </div>
+  </div>
+
+  <footer>每个时间节点到达时，按你在「编辑」里设置的提醒方式提示（可多选）。提示音由网页实时合成，可离线使用。</footer>
+        </div><!-- /wrap -->
+        </div><!-- /screen-scroll -->
+        <div class="homebar" id="homebar" title="双击外框最大化 · 锁屏后点此解锁"></div>
+        <div class="aod" id="aod">
+          <div class="aod-time" id="aodTime">--:--</div>
+          <div class="aod-date" id="aodDate"></div>
+          <div class="aod-alarm" id="aodAlarm"></div>
+          <div class="aod-hint">点击任意处解锁</div>
+        </div>
+
+      <button class="bg-fab" id="bgToggle" title="背景音乐：点击开关 · 可拖动" aria-label="背景音乐">
+        <svg class="note" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="beam" d="M8 5 L8 16.5 M18 3 L18 14.5 M8 5 L18 3" />
+          <circle class="head" cx="6" cy="17" r="2.8" />
+          <circle class="head" cx="16" cy="15" r="2.8" />
+          <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" />
+        </svg>
+        <span class="spark s1">♪</span>
+        <span class="spark s2">♪</span>
+      </button>
+
+<!-- 编辑弹窗 -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3 id="modalTitle">编辑作息</h3>
+    <div id="edRows"></div>
+    <button class="ghost" id="addRow" style="margin-top:6px">+ 增加一项</button>
+    <p class="hint">从上到下依次填写：开始时间 → 事项（专注）→ 休息 → 事项 → 休息 → … → 午休 → 事项 … 每项对应一个时间段。类型选「专注」到点进入工作并响提示音；选「休息/午休」到点进入休息屏。保存后自动存入本机（localStorage）。</p>
+    <div class="ed-actions">
+      <button class="primary" id="saveBtn">保存</button>
+      <button class="ghost" id="cancelBtn">取消</button>
+      <button class="ghost" id="deleteSchBtn" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">删除此套</button>
+    </div>
+  </div>
+</div>
+
+<!-- 下课休息遮罩 -->
+  <div class="overlay" id="overlay">
+    <div class="big" id="ovTitle">休息一下 🔔</div>
+    <div class="sub2" id="ovSub">休息时间</div>
+    <div class="mini" id="ovMini"></div>
+    <div class="ov-media" id="ovMedia"></div>
+    <div class="ov-actions" id="ovActions"></div>
+  </div>
+
+<!-- 闹钟提醒遮罩 -->
+  <div class="overlay alarm-ov" id="alarmOverlay">
+    <div class="big" id="alarmTitle">闹钟</div>
+    <div class="alarm-tip">提示音每 2 秒循环，点「关闭」停止</div>
+    <div class="ov-actions"><button class="ov-btn" id="alarmClose">关闭</button></div>
+  </div>
+
+  <!-- 闹钟管理弹窗 -->
+  <div class="modal" id="alarmModal">
+    <div class="modal-box">
+      <h3>闹钟</h3>
+      <div class="schedule-list" id="alarmList"></div>
+      <button class="ghost alarm-add" id="alarmAdd">+ 添加</button>
+      <p class="set-hint" style="margin-top:8px">到点弹窗，点关闭停止。</p>
+      <div class="ed-actions">
+        <button class="primary" id="alarmModalClose">完成</button>
+      </div>
+    </div>
+  </div><!-- /alarmModal -->
+
+  <!-- 分享二维码弹窗 -->
+  <div class="modal" id="qrModal">
+    <div class="modal-box" style="text-align:center;padding:30px 24px 24px">
+      <h3 style="margin-bottom:16px">分享</h3>
+      <div id="qrCanvas" style="display:flex;justify-content:center;margin-bottom:14px"></div>
+      <p style="color:var(--sub);font-size:13px;margin-bottom:10px">扫码即可打开 · 支持添加到主屏幕</p>
+      <div class="ed-actions">
+        <button class="primary" id="qrClose">完成</button>
+      </div>
+    </div>
+  </div>
+      </div><!-- /screen -->
+    </div><!-- /phone -->
+  </div><!-- /desk -->
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- 预设作息 ----------
+  // 类型：focus=专注/上课，break=休息/下课，lunch=午休（更长休息）
+  // vocab：每套模式自己的词汇，小学模式保留「上课/下课」，其他模式用「专注/休息」
+  var DEFAULT_VOCAB = {focus:"专注", break:"休息", lunch:"午休"};
+  var SCHOOL_VOCAB = {focus:"上课", break:"下课", lunch:"午休"};
+
+  var PRESETS = [
+    {
+      id:"primary", name:"小学标准作息（上课铃·下课铃）", start:"08:20", vocab:SCHOOL_VOCAB,
+      periods:[
+        {name:"第一节", type:"focus", min:40},
+        {name:"课间休息", type:"break", min:10},
+        {name:"第二节", type:"focus", min:40},
+        {name:"课间休息", type:"break", min:10},
+        {name:"大课间·眼保健操", type:"break", min:30},
+        {name:"第三节", type:"focus", min:40},
+        {name:"课间休息", type:"break", min:10},
+        {name:"第四节", type:"focus", min:40},
+        {name:"午休", type:"lunch", min:140},
+        {name:"第五节", type:"focus", min:40},
+        {name:"课间休息", type:"break", min:10},
+        {name:"第六节", type:"focus", min:40},
+        {name:"课间·眼保健操", type:"break", min:20},
+        {name:"第七节·活动", type:"focus", min:40}
+      ]
+    },
+    {
+      id:"pomodoro", name:"番茄节奏(25+5)", start:"09:00",
+      periods:[
+        {name:"专注 1", type:"focus", min:25},
+        {name:"短休息", type:"break", min:5},
+        {name:"专注 2", type:"focus", min:25},
+        {name:"短休息", type:"break", min:5},
+        {name:"专注 3", type:"focus", min:25},
+        {name:"短休息", type:"break", min:5},
+        {name:"专注 4", type:"focus", min:25},
+        {name:"长休息", type:"break", min:15}
+      ]
+    },
+    {
+      id:"deepwork", name:"45分钟专注节奏(45+10)", start:"08:00",
+      periods:[
+        {name:"专注 1", type:"focus", min:45},
+        {name:"休息", type:"break", min:10},
+        {name:"专注 2", type:"focus", min:45},
+        {name:"休息", type:"break", min:10},
+        {name:"大休息", type:"break", min:30},
+        {name:"专注 3", type:"focus", min:45},
+        {name:"休息", type:"break", min:10},
+        {name:"专注 4", type:"focus", min:45}
+      ]
+    }
+  ];
+
+  var LS_KEY="schoolbell_schedules_v1";
+  var LS_SEL="schoolbell_selected_v1";
+
+  function loadSchedules(){
+    var base = PRESETS.map(function(p){return JSON.parse(JSON.stringify(p));});
+    try{
+      var raw = localStorage.getItem(LS_KEY);
+      if(raw){
+        var user = JSON.parse(raw);
+        // 用户自定义覆盖同名，或追加
+        user.forEach(function(u){
+          var i = base.findIndex(function(b){return b.id===u.id;});
+          if(i>=0) base[i]=u; else base.push(u);
+        });
+      }
+    }catch(e){}
+    return base;
+  }
+  function saveUserSchedules(all){
+    // 只存用户新增/修改的（非 PRESETS 原始）
+    var presetIds = PRESETS.map(function(p){return p.id;});
+    var user = all.filter(function(s){return presetIds.indexOf(s.id)<0;});
+    // 也存对预设的修改（比较整条作息：开始时间、名称、节次等任一变化都视为已修改）
+    var modified = all.filter(function(s){
+      if(presetIds.indexOf(s.id)<0) return false;
+      var orig = PRESETS.find(function(p){return p.id===s.id;});
+      return JSON.stringify(orig)!==JSON.stringify(s);
+    });
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(user.concat(modified))); }catch(e){}
+  }
+
+  var schedules = loadSchedules();
+  var currentId = localStorage.getItem(LS_SEL) || schedules[0].id;
+
+  // ---------- DOM ----------
+  var el = {
+    modeSelect:document.getElementById("modeSelect"),
+    editBtn:document.getElementById("editBtn"),
+    newBtn:document.getElementById("newBtn"),
+    time:document.getElementById("time"),
+    badge:document.getElementById("badge"),
+    periodName:document.getElementById("periodName"),
+    nextInfo:document.getElementById("nextInfo"),
+    ring:document.getElementById("ring"),
+    userNote:document.getElementById("userNote"),
+    scheduleList:document.getElementById("scheduleList"),
+    scheduleCard:document.getElementById("scheduleCard"),
+    scheduleHead:document.getElementById("scheduleHead"),
+    modal:document.getElementById("modal"),
+    modalTitle:document.getElementById("modalTitle"),
+    edRows:document.getElementById("edRows"),
+    addRow:document.getElementById("addRow"),
+    saveBtn:document.getElementById("saveBtn"),
+    cancelBtn:document.getElementById("cancelBtn"),
+    deleteSchBtn:document.getElementById("deleteSchBtn"),
+    overlay:document.getElementById("overlay"),
+    ovTitle:document.getElementById("ovTitle"),
+    ovSub:document.getElementById("ovSub"),
+    ovMini:document.getElementById("ovMini"),
+    ovMedia:document.getElementById("ovMedia"),
+    ovActions:document.getElementById("ovActions"),
+    bgToggle:document.getElementById("bgToggle"),
+    bgSource:document.getElementById("bgSource"),
+    bgUrl:document.getElementById("bgUrl"),
+    bgUrlRow:document.getElementById("bgUrlRow"),
+    bgAudio:document.getElementById("bgAudio"),
+    bgImgSel:document.getElementById("bgImgSel"),
+    bgImgFile:document.getElementById("bgImgFile"),
+    phone:document.getElementById("phone"),
+    aod:document.getElementById("aod"),
+    aodTime:document.getElementById("aodTime"),
+    aodDate:document.getElementById("aodDate"),
+    aodAlarm:document.getElementById("aodAlarm"),
+    homebar:document.getElementById("homebar"),
+    sbTime:document.getElementById("sbTime"),
+    alarmList:document.getElementById("alarmList"),
+    alarmAdd:document.getElementById("alarmAdd"),
+    newMenu:document.getElementById("newMenu"),
+    newModeBtn:document.getElementById("newModeBtn"),
+    newAlarmBtn:document.getElementById("newAlarmBtn"),
+    shareBtn:document.getElementById("shareBtn"),
+    qrModal:document.getElementById("qrModal"),
+    qrClose:document.getElementById("qrClose"),
+    qrCanvas:document.getElementById("qrCanvas"),
+    alarmModal:document.getElementById("alarmModal"),
+    alarmModalClose:document.getElementById("alarmModalClose"),
+    settingsHead:document.getElementById("settingsHead"),
+    settingsCard:document.getElementById("settingsCard"),
+    settingsArrow:document.getElementById("settingsArrow"),
+    alarmOverlay:document.getElementById("alarmOverlay"),
+    alarmTitle:document.getElementById("alarmTitle"),
+    alarmClose:document.getElementById("alarmClose"),
+    bgLayer:document.getElementById("bgLayer")
+  };
+
+  var RING_LEN = 2*Math.PI*100;
+  el.ring.style.strokeDasharray = RING_LEN;
+
+  function getCurrent(){ return schedules.find(function(s){return s.id===currentId;}) || schedules[0]; }
+
+  // ---------- 渲染 ----------
+  function renderModes(){
+    el.modeSelect.innerHTML="";
+    schedules.forEach(function(s){
+      var o=document.createElement("option");
+      o.value=s.id; o.textContent=s.name;
+      if(s.id===currentId) o.selected=true;
+      el.modeSelect.appendChild(o);
+    });
+  }
+
+  function fmt(sec){
+    sec=Math.max(0,Math.floor(sec));
+    var m=Math.floor(sec/60), s=sec%60;
+    return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+  }
+  function fmtMin(min){ return min+" 分"; }
+
+  function computeRanges(sch){
+    var parts=(sch.start||"08:00").split(":");
+    var acc=(parseInt(parts[0],10)||0)*60+(parseInt(parts[1],10)||0);
+    return sch.periods.map(function(p){ var s=acc, e=acc+p.min; acc=e; return {s:s,e:e}; });
+  }
+  function minToClock(min){ min=((min%1440)+1440)%1440; var h=Math.floor(min/60), m=min%60; return (h<10?"0":"")+h+":"+(m<10?"0":"")+m; }
+  function ampmOf(min){ var h=Math.floor((((min%1440)+1440)%1440)/60); return h<11?"上午":(h<13?"中午":"下午"); }
+
+  function getVocab(sch){ return sch.vocab || DEFAULT_VOCAB; }
+
+  function renderScheduleList(){
+    var sch=getCurrent();
+    var v=getVocab(sch);
+    var ranges=computeRanges(sch);
+    el.scheduleList.innerHTML="";
+    sch.periods.forEach(function(p,i){
+      var r=ranges[i];
+      var win=ampmOf(r.s)+" "+minToClock(r.s)+"–"+minToClock(r.e);
+      var row=document.createElement("div");
+      row.className="sch-row"+((state.phase==="running"||state.phase==="waiting") && i===state.index?" active":"");
+      row.innerHTML='<div class="idx">'+(i+1)+'</div>'+
+        '<div class="nm">'+escapeHtml(p.name)+'<div style="font-size:12px;color:var(--sub);font-weight:400;margin-top:2px">'+win+'</div></div>'+
+        '<div class="ty '+p.type+'">'+v[p.type]+'</div>'+
+        '<div class="dur">'+fmtMin(p.min)+'</div>';
+      el.scheduleList.appendChild(row);
+    });
+  }
+
+  function escapeHtml(s){return String(s).replace(/[&<>"]/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"})[c];});}
+
+  function setRing(remain,total,type){
+    var ratio = total>0 ? remain/total : 0;
+    el.ring.style.strokeDashoffset = RING_LEN*(1-ratio);
+    el.ring.style.stroke = (type==="break"||type==="lunch") ? "var(--break)" : "var(--class)";
+  }
+
+  function updateClockUI(){
+    tickStatusBar();
+    updateAOD();
+    var sch=getCurrent();
+    var v=getVocab(sch);
+    if(state.phase==="done"){
+      el.time.textContent="结束"; el.badge.className="badge break"; el.badge.textContent="已完成";
+      el.periodName.textContent="今日安排结束 🎉"; el.nextInfo.textContent=""; setRing(0,1,"break"); return;
+    }
+    if(state.phase==="waiting"){
+      el.time.textContent=fmt(state.remain);
+      el.badge.className="badge focus"; el.badge.textContent="等待开始";
+      el.periodName.textContent="距开始还有";
+      el.nextInfo.textContent=sch.start+" 开始 · "+sch.name;
+      setRing(state.remain, state.waitTotal||1, "focus");
+      return;
+    }
+    if(state.phase==="idle" || (!state.running && state.index===0 && state.remain===0)){
+      el.time.textContent="--:--"; el.badge.className="badge"; el.badge.textContent="未开始";
+      el.periodName.textContent="选择模式后开始执行"; el.nextInfo.textContent=""; setRing(0,1,"focus"); return;
+    }
+    var p=sch.periods[state.index];
+    if(!p){ return; }
+    el.time.textContent=fmt(state.remain);
+    var label = p.type==="focus" ? (v.focus+"中") : v[p.type];
+    el.badge.className="badge "+(p.type==="focus"?"focus":p.type);
+    el.badge.textContent = label;
+    el.periodName.textContent=p.name;
+    setRing(state.remain, p.min*60, p.type);
+    var nx=sch.periods[state.index+1];
+    var ranges=computeRanges(sch); var cur=ranges[state.index];
+    var win = cur ? (ampmOf(cur.s)+" "+minToClock(cur.s)+"–"+minToClock(cur.e)) : "";
+    el.nextInfo.textContent = win ? ("本节 "+win + (nx?(" · 下一节："+nx.name):" · 今日结束 🎉")) : (nx?("下一节："+nx.name):"今日结束");
+    updateAOD();
+  }
+
+  // ---------- 计时引擎（全部按真实时间节点驱动） ----------
+  var state={phase:"idle", running:false, index:0, remain:0, waitTotal:0, waitEnd:null, bnd:null, timer:null, paused:false};
+
+  // 计算每节次的真实绝对时间边界；anchorDate 为第 1 节的开始时刻
+  function getBoundaries(sch, anchorDate){
+    var acc=0;
+    return sch.periods.map(function(p){
+      var dS=new Date(anchorDate.getTime()+acc*60000);
+      acc+=p.min;
+      var dE=new Date(anchorDate.getTime()+acc*60000);
+      return {dS:dS, dE:dE, type:p.type, name:p.name, min:p.min, action:p.action, media:p.media, speech:p.speech};
+    });
+  }
+  // 今天“第一课开始时间”对应的绝对时刻
+  function getRealStart(sch){
+    var parts=(sch.start||"08:00").split(":");
+    var m=(parseInt(parts[0],10)||0)*60+(parseInt(parts[1],10)||0);
+    var n=new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate(), Math.floor(m/60), m%60, 0, 0);
+  }
+
+  function start(){
+    var sch=getCurrent();
+    if(!audioCtx) initAudio();
+    var now=new Date();
+    var useRealTime = sch.startMode ? (sch.startMode==="fixed") : !!(sch.start && sch.start.trim());
+    if(useRealTime){
+      // 真实时间模式：以今天“第一课开始时间”为锚点，按真实钟点定位当前节次
+      var realStart=getRealStart(sch);
+      var bnd=getBoundaries(sch, realStart);
+      var idx=-1;
+      for(var i=0;i<bnd.length;i++){ if(now>=bnd[i].dS && now<bnd[i].dE){ idx=i; break; } }
+      if(idx<0){
+        if(now<realStart){ // 还没到开始时间 → 等待，到钟点自动提示（之前已过的节次不补提示）
+          state.phase="waiting"; state.waitEnd=realStart; state.waitTotal=Math.round((realStart-now)/1000);
+        } else { // 已过今日最后一节 → 今日结束
+          finishDay(); return;
+        }
+      } else { state.phase="running"; state.index=idx; } // 下午打开直接落在下午节次
+      state.bnd=bnd;
+    }else{
+      // 预览模式：把“现在”当作第 1 节起点，便于快速看完整循环（非真实钟点）
+      state.bnd=getBoundaries(sch, now);
+      state.phase="running"; state.index=0;
+    }
+    state.running=true; state.paused=false;
+    tick(); // 立即刷新 UI
+    state.timer=setInterval(tick,1000);
+    renderScheduleList();
+    saveSession();
+  }
+
+  function tick(){
+    if(state.paused || !state.running) return;
+    var now=new Date();
+    if(state.phase==="waiting"){
+      if(now>=state.waitEnd){ // 到钟点 → 进第 1 节
+        state.phase="running"; state.index=0;
+        onNode(state.bnd[0]); renderScheduleList();
+      }else{
+        state.remain=Math.max(0, Math.round((state.waitEnd-now)/1000));
+        updateClockUI(); return;
+      }
+    }
+    var b=state.bnd[state.index];
+    if(!b){ finishDay(); return; }
+    if(now>=b.dE){ // 到达“本节真实结束节点”→ 按所选方式提示并切下一节（永远卡真实钟点，不漂移）
+      state.index++;
+      if(state.index>=state.bnd.length){ finishDay(); return; }
+      var np=state.bnd[state.index];
+      state.remain=Math.max(0, Math.round((np.dE-now)/1000));
+      onNode(np); renderScheduleList();
+      updateClockUI(); return;
+    }
+    state.remain=Math.max(0, Math.round((b.dE-now)/1000));
+    updateClockUI();
+  }
+
+  function reset(){
+    state.running=false; state.phase="idle"; state.paused=false; state.index=0; state.remain=0; state.waitTotal=0;
+    if(state.timer){clearInterval(state.timer); state.timer=null;}
+    hideOverlay(); stopMusic();
+    renderScheduleList(); updateClockUI();
+    saveSession();
+  }
+
+  function finishDay(){
+    state.running=false; state.phase="done";
+    if(state.timer){clearInterval(state.timer); state.timer=null;}
+    el.time.textContent="结束"; el.badge.className="badge break"; el.badge.textContent="已完成";
+    el.periodName.textContent="今日安排结束 🎉"; el.nextInfo.textContent="";
+    hideOverlay(); stopMusic();
+    renderScheduleList();
+    saveSession();
+  }
+
+  // ---------- 提醒方式：每套作息独立配置（存 sch.alert，在「编辑」里设置） ----------
+  var DEFAULT_ALERT={sound:true, popup:true, tts:true, notify:false};
+  function getAlert(sch){
+    var a=(sch&&sch.alert)||{};
+    return { sound:a.sound!==false, popup:a.popup!==false, tts:a.tts!==false, notify:!!a.notify };
+  }
+  function onNode(np){
+    var sch=getCurrent(); var v=getVocab(sch);
+    var A=getAlert(sch);
+    var enteringRest = (np.type==="break"||np.type==="lunch");
+    if(A.sound){
+      if(np.type==="focus") playSound(sch.sound1||"crisp"); else playSound(sch.sound2||"crisp");
+    }
+    var pk = pickNode(np, v);
+    if(A.popup){
+      if(enteringRest) showOverlay(np); else { hideOverlay(); showToast(pk.tts || np.name); }
+    } else if(enteringRest){ hideOverlay(); }
+    if(A.notify){ sendNotify(np, v); }
+    if(A.tts){ speakNode(np, v); }
+  }
+  function showToast(msg){
+    var t=document.createElement("div");
+    t.textContent=msg;
+    t.style.cssText="position:fixed;left:50%;top:24px;transform:translateX(-50%);background:var(--panel);"+
+      "color:var(--txt);border:1px solid var(--line);padding:12px 20px;border-radius:12px;font-weight:600;"+
+      "box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:40;transition:opacity .4s;";
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity="0"; }, 2600);
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3100);
+  }
+  function sendNotify(np, v){
+    try{
+      if(!("Notification" in window)) return;
+      if(Notification.permission==="granted"){
+        new Notification(pickNode(np, v).tts || np.name);
+      }
+    }catch(e){}
+  }
+  function fillTpl(t, name){ return (t||"").replace(/\{name\}/g, name||""); }
+  // 节点默认播报词（规则自动生成，用于编辑器 placeholder 与留空回退）
+  function hasMedia(p){ return !!(p && p.media && p.media.trim()); }
+  function defaultSpeechFor(p){
+    if((p.type==="break"||p.type==="lunch") && p.action==="music" && hasMedia(p)) return "听音乐时间到了";
+    if((p.type==="break"||p.type==="lunch") && p.action==="video" && hasMedia(p)) return "跟练时间到了";
+    return (p.name||"") + "时间到了";
+  }
+  // 选词：返回 {title: 弹窗标题, tts: 语音播报词}；节点自带 speech 优先，否则用默认规则
+  function pickNode(np, v){
+    var enteringRest=(np.type==="break"||np.type==="lunch");
+    var tts = (np.speech&&np.speech.trim()) ? np.speech : defaultSpeechFor(np);
+    if(!enteringRest){
+      return { title:v.focus+"时间 · "+np.name, tts:fillTpl(tts, np.name) };
+    }
+    return { title:fillTpl(tts, np.name), tts:fillTpl(tts, np.name) };
+  }
+  function speakNode(np, v){
+    try{
+      if(!window.speechSynthesis) return;
+      var txt=pickNode(np,v).tts;
+      if(!txt) return;
+      var u=new SpeechSynthesisUtterance(txt);
+      u.lang="zh-CN"; u.rate=1.0;
+      window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  // ---------- 休息遮罩（到达节点显示播报词，点击确认后才播放） ----------
+  function showOverlay(np){
+    var sch=getCurrent(); var v=getVocab(sch);
+    var isLunch=(np.type==="lunch");
+    var action = np.action || (isLunch||np.type==="break" ? "music" : "none");
+    var pk = pickNode(np, v);
+    el.overlay.classList.add("show");
+    el.ovTitle.textContent = pk.title;
+    el.ovSub.textContent = np.name + (isLunch?(" · "+v.lunch):(" · "+v.break));
+    el.ovMini.textContent="距"+v.focus+"还有 "+fmt(state.remain);
+    el.ovMedia.innerHTML="";
+    var actions=el.ovActions; actions.innerHTML="";
+    function addBtn(txt, fn, ghost){
+      var b=document.createElement("button");
+      b.className="ov-btn"+(ghost?" ghost":"");
+      b.textContent=txt; b.onclick=fn; actions.appendChild(b);
+    }
+    if(action==="none"){
+      addBtn("知道了", function(){ hideOverlay(); });
+    } else if(action==="music"){
+      addBtn("▶ 开始播放音乐", function(){ playRestMedia(np,"music"); });
+    } else if(action==="video"){
+      addBtn("▶ 播放跟练视频", function(){ playRestMedia(np,"video"); });
+    }
+    addBtn("关闭", function(){ hideOverlay(); }, true);
+    var iv=setInterval(function(){
+      if(!el.overlay.classList.contains("show")){clearInterval(iv);return;}
+      el.ovMini.textContent="距"+v.focus+"还有 "+fmt(state.remain);
+    },1000);
+  }
+  function toEmbed(url){
+    var m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/);
+    if(m) return "https://www.youtube.com/embed/"+m[1];
+    return url;
+  }
+  function ensureFileUrl(u){
+    if(!u) return u;
+    if(u.indexOf("://")>=0) return u;          // 已有协议（http/https/file）
+    if(u.charAt(0)==="/") return "file://"+u;  // /Users/x → file:///Users/x
+    return u;
+  }
+  function playRestMedia(np, kind){
+    if(bgPlaying) stopBgMusic(); // 休息媒体播放时暂停背景乐，避免两路声音重叠
+    if(kind==="music"){
+      if(np.media){
+        el.ovMedia.innerHTML='<audio controls autoplay style="width:100%;max-width:420px" src="'+escapeHtml(ensureFileUrl(np.media))+'"></audio>';
+      } else {
+        startMusic();
+      }
+    } else if(kind==="video"){
+      if(np.media){
+        var src=toEmbed(np.media);
+        if(src!==np.media){ // YouTube 等在线链接 → 嵌入播放器
+          el.ovMedia.innerHTML='<iframe id="ovVideo" src="'+escapeHtml(src)+'" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="width:100%;max-width:560px;aspect-ratio:16/9;border-radius:14px;background:#000"></iframe>';
+        } else { // 本地视频文件或直链视频 → 用原生 <video> 标签
+          el.ovMedia.innerHTML='<video controls autoplay style="width:100%;max-width:560px;aspect-ratio:16/9;border-radius:14px;background:#000" src="'+escapeHtml(ensureFileUrl(np.media))+'"></video>';
+        }
+      } else {
+        el.ovMedia.innerHTML='<div class="mini">未设置视频链接，可在「编辑当前」里给该休息节点选「视频跟练」并填链接</div>';
+      }
+    }
+  }
+  function hideOverlay(){ el.overlay.classList.remove("show"); stopMusic(); var f=document.getElementById("ovVideo"); if(f) f.src=""; }
+
+  // ---------- Web Audio 合成铃声 ----------
+  var audioCtx=null, musicNodes=null;
+  function initAudio(){
+    try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ audioCtx=null; }
+  }
+  function bellNote(freq, startT, dur, gainPeak){
+    if(!audioCtx) return;
+    var t0=audioCtx.currentTime+startT;
+    var osc=audioCtx.createOscillator();
+    var osc2=audioCtx.createOscillator();
+    var g=audioCtx.createGain();
+    osc.type="triangle"; osc2.type="sine";
+    osc.frequency.value=freq; osc2.frequency.value=freq*2.01; // 泛音让铃声更亮
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(gainPeak,t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    osc.connect(g); osc2.connect(g); g.connect(audioCtx.destination);
+    osc.start(t0); osc2.start(t0);
+    osc.stop(t0+dur); osc2.stop(t0+dur);
+  }
+  // 通用合成音：支持不同波形、是否叠加泛音、峰值增益
+  function tone(freq, startT, dur, opts){
+    if(!audioCtx) return;
+    opts=opts||{};
+    var t0=audioCtx.currentTime+startT;
+    var g=audioCtx.createGain();
+    var peak=opts.gain||0.32;
+    var osc=audioCtx.createOscillator();
+    osc.type=opts.wave||"triangle"; osc.frequency.value=freq; osc.connect(g);
+    var osc2=null;
+    if(opts.harmonic){ osc2=audioCtx.createOscillator(); osc2.type="sine"; osc2.frequency.value=freq*2.01; osc2.connect(g); }
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(peak,t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    g.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0+dur);
+    if(osc2){ osc2.start(t0); osc2.stop(t0+dur); }
+  }
+
+  // 提示音音效库（像手机选铃声一样可选、可试听）
+  var SOUND_LIBRARY = [
+    {id:"crisp",      name:"清脆铃（上行）", wave:"triangle", harmonic:true,  seq:[[660,0,0.4],[880,0.24,0.4],[1100,0.48,0.4],[880,0.72,0.6]]},
+    {id:"gentle",     name:"柔和铃（下行）", wave:"sine",     harmonic:true,  seq:[[880,0,0.5],[660,0.32,0.5],[660,0.64,0.6]]},
+    {id:"wood",       name:"木鱼（沉稳）",   wave:"sine",     harmonic:false, gain:0.42, seq:[[420,0,0.12],[420,0.2,0.12],[420,0.4,0.16]]},
+    {id:"musicbox",   name:"八音盒（琶音）", wave:"sine",     harmonic:true,  seq:[[1046,0,0.5],[1318,0.16,0.5],[1568,0.32,0.7]]},
+    {id:"electronic", name:"电子三连音",     wave:"square",   harmonic:false, gain:0.16, seq:[[784,0,0.14],[784,0.2,0.14],[1046,0.4,0.3]]},
+    {id:"dingdong",   name:"叮咚双音",       wave:"triangle", harmonic:true,  seq:[[988,0,0.5],[740,0.42,0.7]]}
+  ];
+  function findSound(id){ for(var i=0;i<SOUND_LIBRARY.length;i++){ if(SOUND_LIBRARY[i].id===id) return SOUND_LIBRARY[i]; } return SOUND_LIBRARY[0]; }
+  function playSound(id){
+    if(!id||id==="none") return;
+    if(!audioCtx){initAudio(); if(!audioCtx)return;}
+    if(audioCtx.state==="suspended"){ try{audioCtx.resume();}catch(e){} }
+    var s=findSound(id);
+    s.seq.forEach(function(n){ tone(n[0],n[1],n[2],{wave:s.wave,harmonic:s.harmonic,gain:s.gain}); });
+  }
+  // 轻音乐：简单的环境音 pad（两三个正弦叠加缓慢起伏）
+  function startMusic(){
+    if(!audioCtx) initAudio();
+    if(!audioCtx||musicNodes) return;
+    var g=audioCtx.createGain();
+    g.gain.value=0.0; g.connect(audioCtx.destination);
+    g.gain.linearRampToValueAtTime(0.08, audioCtx.currentTime+1.5);
+    var freqs=[220,277.18,329.63]; // A3 C#4 E4 大三和弦
+    var oscs=freqs.map(function(f){
+      var o=audioCtx.createOscillator();
+      o.type="sine"; o.frequency.value=f;
+      var lfo=audioCtx.createOscillator(); var lg=audioCtx.createGain();
+      lfo.frequency.value=0.15; lg.gain.value=3; lfo.connect(lg); lg.connect(o.frequency);
+      o.connect(g); o.start(); lfo.start();
+      return {o:o,l:lfo};
+    });
+    musicNodes={g:g,oscs:oscs};
+  }
+  function stopMusic(){
+    if(!musicNodes) return;
+    try{
+      musicNodes.g.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime+0.4);
+      var nodes=musicNodes;
+      setTimeout(function(){
+        nodes.oscs.forEach(function(x){try{x.o.stop();x.l.stop();}catch(e){}});
+      },500);
+    }catch(e){}
+    musicNodes=null;
+  }
+
+  // ---------- 背景音乐（独立于休息音乐） ----------
+  // 默认：Web Audio 合成的「柔和环境音乐」——慢速和弦铺底 + 稀疏琶音，
+  // 和弦之间交叉淡入淡出，可无缝无限循环，音量克制不扰工作。离线可用。
+  // ---------- 背景音乐：内置真实音频（无缝循环），支持网络/本地 ----------
+  // 三首均为免费可商用（Mixkit License）真实录音，首尾淡变到静音，<audio loop> 无缝衔接
+  var BG_FILES = {
+    lofi:  "assets/audio/lofi_loop.mp3",
+    piano: "assets/audio/piano_loop.mp3",
+    rain:  "assets/audio/rain_loop.mp3"
+  };
+  var BG_VOL = 0.5;
+  var bgPlaying=false;
+  var LS_BGON="schoolbell_bgon_v1";
+  function saveBgOn(on){ try{ localStorage.setItem(LS_BGON, on?"1":"0"); }catch(e){} }
+  function loadBgOn(){ try{ return localStorage.getItem(LS_BGON)==="1"; }catch(e){ return false; } }
+  function armBgResume(){
+    var k=function(e){
+      document.removeEventListener("pointerdown", k, true);
+      document.removeEventListener("keydown", k, true);
+      if(e.target===el.bgToggle) return; // 用户直接点了背景按钮，交给按钮自身处理
+      if(!bgPlaying) startBgMusic();
+    };
+    document.addEventListener("pointerdown", k, true);
+    document.addEventListener("keydown", k, true);
+  }
+  function bgCfg(){ try{ return JSON.parse(localStorage.getItem("schoolbell_bg_v1")||"{}"); }catch(e){ return {}; } }
+  function loadBgCfg(){
+    var c=bgCfg();
+    var src=c.source||"lofi";
+    if(src==="mozart"||src==="chord") src="lofi";   // 兼容旧合成风格名
+    else if(src==="pad") src="piano";
+    if(src!=="lofi"&&src!=="piano"&&src!=="rain"&&src!=="net"&&src!=="local") src="lofi";
+    return { source:src, url:c.url||"" };
+  }
+  function startBgMusic(){
+    if(bgPlaying) return;
+    var c=loadBgCfg();
+    var src=c.source;
+    var go=function(file){
+      try{
+        el.bgAudio.loop=true; el.bgAudio.volume=BG_VOL; el.bgAudio.src=file;
+        var p=el.bgAudio.play();
+        if(p&&p.then){ // 浏览器允许则自动播放成功；被拦截则等待用户首次交互再续播
+          p.then(function(){ bgPlaying=true; updateBgBtn(); }).catch(function(){});
+        } else { bgPlaying=true; updateBgBtn(); }
+      }catch(e){}
+    };
+    if(src==="net"||src==="local"){
+      if(c.url){ go(ensureFileUrl(c.url)); return; }
+      src="lofi"; // 选了网络/本地但没填链接：兜底播默认
+    }
+    go(BG_FILES[src]||BG_FILES.lofi);
+  }
+  function stopBgMusic(){
+    bgPlaying=false; updateBgBtn();
+    try{ el.bgAudio.pause(); }catch(e){}
+  }
+  function toggleBgMusic(){ if(bgPlaying) stopBgMusic(); else startBgMusic(); }
+  function updateBgBtn(){
+    if(bgPlaying){ el.bgToggle.classList.add("on"); }
+    else { el.bgToggle.classList.remove("on"); }
+    saveBgOn(bgPlaying);
+  }
+
+  // ---------- 运行态持久化（刷新后计时继续） ----------
+  var LS_SESSION="schoolbell_session_v1";
+  function saveSession(){
+    try{ localStorage.setItem(LS_SESSION, JSON.stringify({
+      running: state.running, paused: state.paused,
+      scheduleId: currentId
+    })); }catch(e){}
+  }
+  function loadSession(){ try{ return JSON.parse(localStorage.getItem(LS_SESSION)||"{}"); }catch(e){ return {}; } }
+
+  // ---------- 最小化 + 背景图 ----------
+  var LS_BGIMG="schoolbell_bgimg_v1";
+  var BG_PRESETS=[
+    {name:"风景", val:"preset:assets/bg/bg0.jpg"}
+  ];
+  function loadBgImg(){
+    try{
+      var o=JSON.parse(localStorage.getItem(LS_BGIMG)||"{}");
+      var cur=o.current||BG_PRESETS[0].val;
+      var valid=new Set(BG_PRESETS.map(function(p){return p.val;}).concat(["none"]));
+      if(!valid.has(cur)) cur=BG_PRESETS[0].val;
+      var history=(o.history||[]).filter(function(h){ return valid.has(h) || h.indexOf("data:")===0 || h.indexOf("http")===0; });
+      return {current:cur, history:history};
+    }catch(e){ return {current:BG_PRESETS[0].val, history:[]}; }
+  }
+  function saveBgImg(o){ try{ localStorage.setItem(LS_BGIMG, JSON.stringify(o)); }catch(e){} }
+  function bgImgUrl(val){ if(!val||val==="none") return ""; if(val.indexOf("preset:")===0) return val.slice(7); return val; }
+  function applyBgImg(val){
+    var u=bgImgUrl(val);
+    var isCss = /^\s*(linear-gradient|radial-gradient|conic-gradient|url\()/.test(u);
+    var bg = isCss ? u : (u ? 'url("'+u+'")' : "none");
+    el.bgLayer.style.backgroundImage = bg;
+  }
+  function renderBgImgSel(){
+    var o=loadBgImg();
+    el.bgImgSel.innerHTML="";
+    var none=document.createElement("option"); none.value="none"; none.textContent="无（纯色）"; el.bgImgSel.appendChild(none);
+    BG_PRESETS.forEach(function(p){ var op=document.createElement("option"); op.value=p.val; op.textContent=p.name; if(p.val===o.current) op.selected=true; el.bgImgSel.appendChild(op); });
+    if(o.history.length){
+      var sep=document.createElement("option"); sep.disabled=true; sep.textContent="—— 我的图片 ——"; el.bgImgSel.appendChild(sep);
+      o.history.forEach(function(d,i){ var op=document.createElement("option"); op.value=d; op.textContent="我的图片 "+(i+1); if(d===o.current) op.selected=true; el.bgImgSel.appendChild(op); });
+    }
+    applyBgImg(o.current);
+  }
+  function downscaleToDataURL(file, cb){
+    var reader=new FileReader();
+    reader.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var maxW=1280, w=img.width, h=img.height;
+        if(w>maxW){ h=Math.round(h*maxW/w); w=maxW; }
+        var c=document.createElement("canvas"); c.width=w; c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        try{ cb(c.toDataURL("image/jpeg",0.7)); }catch(e){ cb(reader.result); }
+      };
+      img.onerror=function(){ cb(reader.result); };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  el.bgImgSel.onchange=function(){ var o=loadBgImg(); o.current=el.bgImgSel.value; saveBgImg(o); applyBgImg(o.current); };
+  el.bgImgFile.onchange=function(){
+    var f=el.bgImgFile.files&&el.bgImgFile.files[0]; if(!f) return;
+    downscaleToDataURL(f, function(dataUrl){
+      var o=loadBgImg();
+      if(o.history.indexOf(dataUrl)<0) o.history.push(dataUrl);
+      o.current=dataUrl; saveBgImg(o); renderBgImgSel();
+    });
+  };
+  function setMinimized(on){
+    el.phone.classList.toggle("locked", on);
+    try{ localStorage.setItem("schoolbell_min_v1", on?"1":"0"); }catch(e){}
+    updateAOD();
+    if(!on) resetIdle();
+  }
+  function updateAOD(){
+    if(!el.aodTime) return;
+    var t = state.running ? fmt(state.remain) : new Date().toTimeString().slice(0,5);
+    el.aodTime.textContent = t;
+    var d=new Date();
+    el.aodDate.textContent = (d.getMonth()+1)+"月"+d.getDate()+"日 周"+"日一二三四五六"[d.getDay()];
+    var na=nextAlarmInfo();
+    el.aodAlarm.textContent = na ? ("🔔 "+na.label+" "+na.time+" · "+fmt(na.rem)+"后") : "";
+  }
+  el.aod.addEventListener("click", function(){ setMinimized(false); });
+  el.homebar.addEventListener("click", function(){ if(el.phone.classList.contains("locked")) setMinimized(false); });
+  el.phone.addEventListener("dblclick", function(e){
+    if(el.modal.classList.contains("open") || el.alarmModal.classList.contains("open") || el.overlay.classList.contains("show") || el.alarmOverlay.classList.contains("show")) return;
+    if(e.target.closest && e.target.closest("input,textarea,select,button,.modal-box,.overlay")) return;
+    el.phone.classList.toggle("max");
+  });
+  function tickStatusBar(){ if(el.sbTime) el.sbTime.textContent = new Date().toTimeString().slice(0,5); }
+  function nextAlarmInfo(){
+    var now=new Date(); var best=null;
+    alarms.forEach(function(a){
+      if(a.enabled===false) return;
+      if(a.repeat==="once" && a.firedOnce) return;
+      var p=(""+a.time).split(":"); if(p.length<2) return;
+      var d=new Date(now.getFullYear(),now.getMonth(),now.getDate(),+p[0],+p[1],0,0);
+      if(d<=now){
+        if(a.repeat==="once") return;
+        d.setDate(d.getDate()+1);
+      }
+      var rem=Math.round((d-now)/1000);
+      if(best===null || rem<best.rem) best={rem:rem,label:a.label||"闹钟",time:a.time};
+    });
+    return best;
+  }
+  // 30 秒无操作自动最小化（编辑/休息遮罩/闹钟遮罩打开时不触发）
+  var idleTimer=null;
+  function resetIdle(){
+    if(idleTimer) clearTimeout(idleTimer);
+    if(el.phone.classList.contains("locked")) return;
+    if(el.modal.classList.contains("open") || el.alarmModal.classList.contains("open") || el.overlay.classList.contains("show") || el.alarmOverlay.classList.contains("show")) return;
+    idleTimer=setTimeout(function(){
+      if(!state.running) return;
+      if(el.overlay.classList.contains("show") || el.alarmOverlay.classList.contains("show")) return;
+      setMinimized(true);
+    }, 5000);
+  }
+  function setupIdleAutoMin(){
+    ["pointerdown","keydown","mousemove"].forEach(function(ev){
+      document.addEventListener(ev, resetIdle, {passive:true});
+    });
+    resetIdle();
+  }
+
+  // ---------- 闹钟（独立计时，到点无限循环提示直至关闭） ----------
+  var LS_ALARMS="schoolbell_alarms_v1";
+  function loadAlarms(){ try{ var a=JSON.parse(localStorage.getItem(LS_ALARMS)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function saveAlarms(){ try{ localStorage.setItem(LS_ALARMS, JSON.stringify(alarms)); }catch(e){} }
+  var alarms=loadAlarms();
+  
+  function renderAlarms(){
+    el.alarmList.innerHTML="";
+    if(!alarms.length){ el.alarmList.innerHTML='<div class="hint">还没有闹钟，点「+ 添加闹钟」。</div>'; return; }
+    alarms.forEach(function(a,i){
+      var row=document.createElement("div"); row.className="alarm-row";
+      row.innerHTML=
+        '<input type="time" class="ar-time" data-i="'+i+'" value="'+(a.time||"08:00")+'"/>'+
+        '<label class="ac-switch sm ar-switch"><input type="checkbox" class="a-en" data-i="'+i+'"'+(a.enabled!==false?" checked":"")+'/><span class="ac-track"></span></label>';
+      el.alarmList.appendChild(row);
+    });
+    bindAlarms();
+  }
+  function bindAlarms(){
+    el.alarmList.querySelectorAll(".ar-time").forEach(function(inp){inp.onchange=function(){alarms[+inp.dataset.i].time=inp.value; saveAlarms();};});
+    el.alarmList.querySelectorAll(".a-en").forEach(function(c){c.onchange=function(){alarms[+c.dataset.i].enabled=c.checked; saveAlarms();};});
+  }
+  var alarmIv=null;
+  function pad2(n){ return (n<10?"0":"")+n; }
+  function checkAlarms(){
+    var now=new Date();
+    var hhmm=pad2(now.getHours())+":"+pad2(now.getMinutes());
+    var tk=now.toDateString();
+    alarms.forEach(function(a){
+      if(a.enabled===false) return;
+      if(a.time!==hhmm) return;
+      if((a.repeat||"daily")==="once"){
+        if(a.firedOnce) return;
+        a.firedOnce=true; a.enabled=false; saveAlarms(); renderAlarms(); fireAlarm(a);
+      }else{
+        if(a.fired===tk) return;
+        a.fired=tk; saveAlarms(); fireAlarm(a);
+      }
+    });
+  }
+  function fireAlarm(a){
+    var spoken=(a.label||"闹钟")+"时间到了";
+    el.alarmTitle.textContent=spoken;
+    el.alarmOverlay.classList.add("show");
+    try{ el.alarmClose.focus(); }catch(e){}
+    function loop(){
+      if(!el.alarmOverlay.classList.contains("show")) return;
+      var wantVoice = a.ring ? (a.ring==="voice") : (!!a.voice);
+      if(wantVoice){
+        if(window.speechSynthesis){ try{ var u=new SpeechSynthesisUtterance(spoken); u.lang="zh-CN"; window.speechSynthesis.speak(u); }catch(e){} }
+      } else {
+        playSound(a.sound&&a.sound!=="none"?a.sound:"crisp");
+      }
+    }
+    loop();
+    if(alarmIv) clearInterval(alarmIv);
+    alarmIv=setInterval(loop, 2000);
+  }
+  function closeAlarm(){
+    el.alarmOverlay.classList.remove("show");
+    if(alarmIv){ clearInterval(alarmIv); alarmIv=null; }
+    try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+  }
+  el.alarmClose.onclick=closeAlarm;
+  el.alarmOverlay.onclick=function(e){ if(e.target===el.alarmOverlay) closeAlarm(); };
+  el.alarmAdd.onclick=function(){ alarms.push({time:"08:00",ring:"voice",enabled:true,repeat:"once"}); saveAlarms(); renderAlarms(); };
+  setInterval(checkAlarms, 1000);
+
+  // ---------- 编辑弹窗 ----------
+  var editing=null; // 当前编辑的 schedule 副本
+  function openEditor(sch, isNew){
+    editing=JSON.parse(JSON.stringify(sch));
+    if(!editing.vocab) editing.vocab=JSON.parse(JSON.stringify(DEFAULT_VOCAB));
+    if(!editing.start) editing.start="08:00";
+    if(!editing.sound1) editing.sound1="crisp";
+    if(!editing.sound2) editing.sound2="crisp";
+    if(!editing.alert) editing.alert={};
+    if(editing.alert.sound===undefined) editing.alert.sound=true;
+    if(editing.alert.popup===undefined) editing.alert.popup=true;
+    if(editing.alert.tts===undefined) editing.alert.tts=true;
+    if(editing.alert.notify===undefined) editing.alert.notify=false;
+    editing.periods.forEach(function(p){ if((p.type==="break"||p.type==="lunch") && !p.action) p.action="none"; });
+    el.modalTitle.textContent=isNew?("新建作息："+(editing.name||"")):"编辑："+editing.name;
+    el.deleteSchBtn.style.display = (PRESETS.findIndex(function(p){return p.id===editing.id;})>=0 || isNew) ? "none" : "inline-block";
+    renderEdRows();
+    el.modal.classList.add("open");
+  }
+  function renderEdRows(){
+    var v=getVocab(editing);
+    el.edRows.innerHTML="";
+    // 名称行
+    var nameRow=document.createElement("div");
+    nameRow.className="ed-row";
+    nameRow.style.gridTemplateColumns="1fr 130px";
+    nameRow.innerHTML='<div class="field"><span class="cap">作息名称</span><input id="schName" placeholder="作息名称" value="'+escapeHtml(editing.name)+'"/></div>'+
+      '<div class="field"><span class="cap">固定起始时间</span><input id="schStart" type="time" value="'+escapeHtml(editing.start||"08:00")+'" title="固定起始时间"/></div>';
+    el.edRows.appendChild(nameRow);
+    // 开始方式：固定起始时间 / 从当前时间开始（用户可手动选择）
+    var smVal = editing.startMode || ((editing.start && editing.start.trim()) ? "fixed" : "now");
+    var startModeRow=document.createElement("div");
+    startModeRow.className="set-row";
+    startModeRow.innerHTML='<label>开始方式</label>'+
+      '<select id="schStartMode">'+
+        '<option value="fixed"'+((smVal==="fixed")?" selected":"")+'>固定起始时间</option>'+
+        '<option value="now"'+((smVal==="now")?" selected":"")+'>当前时间开始</option>'+
+      '</select>';
+    el.edRows.appendChild(startModeRow);
+    var smSel=document.getElementById("schStartMode");
+    if(smSel) smSel.onchange=function(){
+      editing.startMode=smSel.value;
+      var st=document.getElementById("schStart");
+      if(st) st.disabled=(smSel.value==="now");
+    };
+    var stInit=document.getElementById("schStart");
+    if(stInit) stInit.disabled=(smVal==="now");
+    // 提示音1/提示音2：每套作息各自选择、默认第一种，存到作息对象上
+    var soundRow=document.createElement("div");
+    soundRow.className="ed-sound-row";
+    soundRow.innerHTML='<div class="ed-sound"><label>提示音1（专注节点）</label><select id="edSound1"></select></div>'+
+      '<div class="ed-sound"><label>提示音2（休息节点）</label><select id="edSound2"></select></div>';
+    el.edRows.appendChild(soundRow);
+    var s1=document.getElementById("edSound1"), s2=document.getElementById("edSound2");
+    fillSoundSelect(s1, editing.sound1||"crisp");
+    fillSoundSelect(s2, editing.sound2||"crisp");
+    s1.onchange=function(){ editing.sound1=s1.value; playSound(s1.value); };
+    s2.onchange=function(){ editing.sound2=s2.value; playSound(s2.value); };
+    // 提醒方式：每套作息各自设置，默认开 提示音 + 弹窗 + 语音播报
+    var alertRow=document.createElement("div");
+    alertRow.className="ed-sound-row";
+    alertRow.innerHTML='<div class="ed-sound" style="grid-column:1/-1"><label>提醒方式（每个节点触发，可多选）</label>'+
+      '<div class="alert-opts">'+
+      '<label class="alert-opt"><input type="checkbox" id="edAlSound" '+(editing.alert.sound!==false?"checked":"")+'/> 🔔 提示音</label>'+
+      '<label class="alert-opt"><input type="checkbox" id="edAlPopup" '+(editing.alert.popup!==false?"checked":"")+'/> 🪟 弹窗提示</label>'+
+      '<label class="alert-opt"><input type="checkbox" id="edAlNotify" '+(editing.alert.notify?"checked":"")+'/> 💬 系统通知</label>'+
+      '<label class="alert-opt"><input type="checkbox" id="edAlTts" '+(editing.alert.tts!==false?"checked":"")+'/> 🔊 语音播报</label>'+
+      '</div>'+
+      '<p class="hint" style="margin:6px 0 0">语音播报可逐节点自定义。留空默认播「事项名+时间到了」；休息节点若设了音乐/视频链接，会播对应动作提示。</p></div>';
+    el.edRows.appendChild(alertRow);
+    var bindAlert=function(id,key){ var c=document.getElementById(id); if(c) c.onchange=function(){
+      editing.alert[key]=c.checked;
+      if(key==="notify" && c.checked && "Notification" in window && Notification.permission==="default"){ Notification.requestPermission(); }
+    }; };
+    bindAlert("edAlSound","sound"); bindAlert("edAlPopup","popup"); bindAlert("edAlNotify","notify"); bindAlert("edAlTts","tts");
+    editing.periods.forEach(function(p,i){
+      var row=document.createElement("div");
+      row.className="ed-row";
+      row.innerHTML=
+        '<input data-i="'+i+'" class="pname" placeholder="节次名" value="'+escapeHtml(p.name)+'"/>'+
+        '<input data-i="'+i+'" class="pmin" type="number" min="1" value="'+p.min+'"/>'+
+        '<select data-i="'+i+'" class="ptype"><option value="focus"'+(p.type==="focus"?" selected":"")+'>'+v.focus+'</option><option value="break"'+(p.type==="break"?" selected":"")+'>'+v.break+'</option><option value="lunch"'+(p.type==="lunch"?" selected":"")+'>'+v.lunch+'</option></select>'+
+        '<button class="del" data-i="'+i+'">×</button>';
+      el.edRows.appendChild(row);
+      // 播报词：每个节点可自定义语音内容，留空则用默认词；只在第一项显示说明
+      var sp=document.createElement("div");
+      sp.className="ed-speech";
+      var def=defaultSpeechFor(p);
+      sp.innerHTML=(i===0?'<label>播报词（留空用默认「'+escapeHtml(def)+'」）</label>':'<label>播报词</label>')+
+        '<input data-i="'+i+'" class="pspeech" placeholder="去泡杯咖啡吧；留空即「'+escapeHtml(def)+'」" value="'+escapeHtml(p.speech||"")+'"/>';
+      el.edRows.appendChild(sp);
+      if(p.type==="break"||p.type==="lunch"){
+        var a=document.createElement("div");
+        a.className="ed-action";
+        a.innerHTML='<select data-i="'+i+'" class="paction"><option value="none"'+(p.action==="none"||!p.action?" selected":"")+'>无动作</option><option value="music"'+((p.action==="music")?" selected":"")+'>听音乐</option><option value="video"'+(p.action==="video"?" selected":"")+'>视频跟练</option></select>'+
+          '<input data-i="'+i+'" class="pmedia" placeholder="音乐/视频链接（可空）" value="'+escapeHtml(p.media||"")+'"/>';
+        el.edRows.appendChild(a);
+      }
+    });
+    bindEdRows();
+  }
+  function bindEdRows(){
+    el.edRows.querySelectorAll(".pname").forEach(function(inp){inp.oninput=function(){editing.periods[+inp.dataset.i].name=inp.value;};});
+    el.edRows.querySelectorAll(".pmin").forEach(function(inp){inp.oninput=function(){editing.periods[+inp.dataset.i].min=Math.max(1,parseInt(inp.value||"1",10));};});
+    el.edRows.querySelectorAll(".ptype").forEach(function(sel){sel.onchange=function(){editing.periods[+sel.dataset.i].type=sel.value; renderEdRows();};});
+    el.edRows.querySelectorAll(".paction").forEach(function(sel){sel.onchange=function(){editing.periods[+sel.dataset.i].action=sel.value;};});
+    el.edRows.querySelectorAll(".pmedia").forEach(function(inp){inp.oninput=function(){editing.periods[+inp.dataset.i].media=inp.value;};});
+    el.edRows.querySelectorAll(".pspeech").forEach(function(inp){inp.oninput=function(){editing.periods[+inp.dataset.i].speech=inp.value;};});
+    el.edRows.querySelectorAll(".del").forEach(function(b){b.onclick=function(){editing.periods.splice(+b.dataset.i,1);renderEdRows();};});
+    var nm=document.getElementById("schName"); if(nm) nm.oninput=function(){editing.name=nm.value;};
+    var st=document.getElementById("schStart"); if(st) st.oninput=function(){editing.start=st.value;};
+  }
+  function closeEditor(){ el.modal.classList.remove("open"); editing=null; }
+
+  function saveEditor(){
+    if(!editing) return;
+    editing.name=(editing.name||"未命名作息").trim()||"未命名作息";
+    if(!editing.periods.length){ alert("至少保留一节"); return; }
+    var presetIds=PRESETS.map(function(p){return p.id;});
+    if(editing._isNew || (editing.id && presetIds.indexOf(editing.id)<0 && schedules.findIndex(function(s){return s.id===editing.id;})<0)){
+      editing.id="u_"+Date.now();
+      delete editing._isNew;
+    }
+    var idx=schedules.findIndex(function(s){return s.id===editing.id;});
+    if(idx>=0) schedules[idx]=editing; else schedules.push(editing);
+    saveUserSchedules(schedules);
+    currentId=editing.id; localStorage.setItem(LS_SEL,currentId);
+    var wasRunning=state.running; // 保存时若正在计时，用新设置立即重启，让开始时间/节次即时生效
+    if(wasRunning){ reset(); start(); }
+    closeEditor(); renderModes(); renderScheduleList(); updateClockUI();
+  }
+
+  // ---------- 事件绑定 ----------
+  el.modeSelect.onchange=function(){ currentId=el.modeSelect.value; localStorage.setItem(LS_SEL,currentId); reset(); start(); resetIdle(); };
+  el.editBtn.onclick=function(){ openEditor(getCurrent(),false); };
+  el.newBtn.onclick=function(e){ e.stopPropagation(); el.newMenu.classList.toggle("show"); };
+  el.newModeBtn.onclick=function(){ el.newMenu.classList.remove("show"); openEditor({id:"",name:"我的作息",start:"08:00",periods:[{name:"专注",type:"focus",min:40},{name:"休息",type:"break",min:10}]},true); editing._isNew=true; };
+  el.newAlarmBtn.onclick=function(){ el.newMenu.classList.remove("show"); el.alarmModal.classList.add("open"); renderAlarms(); };
+  el.alarmModalClose.onclick=function(){ el.alarmModal.classList.remove("open"); };
+  el.alarmModal.onclick=function(e){ if(e.target===el.alarmModal) el.alarmModal.classList.remove("open"); };
+  document.addEventListener("click", function(e){
+    if(el.newMenu.classList.contains("show") && !el.newMenu.contains(e.target) && e.target!==el.newBtn && !el.newBtn.contains(e.target)) el.newMenu.classList.remove("show");
+  });
+  el.cancelBtn.onclick=closeEditor;
+  el.saveBtn.onclick=saveEditor;
+  el.deleteSchBtn.onclick=function(){
+    if(!editing) return;
+    schedules=schedules.filter(function(s){return s.id!==editing.id;});
+    saveUserSchedules(schedules);
+    if(currentId===editing.id) currentId=schedules[0].id;
+    localStorage.setItem(LS_SEL,currentId);
+    closeEditor(); renderModes(); renderScheduleList(); updateClockUI();
+  };
+  el.addRow.onclick=function(){
+    if(!editing) return;
+    editing.periods.push({name:"新事项",type:"focus",min:40});
+    renderEdRows();
+  };
+
+  // ---------- 背景音乐：设置（来源/地址/打开即播放） ----------
+  function syncBgUrlRow(){ el.bgUrlRow.style.display=(el.bgSource.value==="net"||el.bgSource.value==="local")?"flex":"none"; }
+  function loadBgSettings(){
+    var c=loadBgCfg();
+    el.bgSource.value=c.source;
+    el.bgUrl.value=c.url;
+    syncBgUrlRow();
+  }
+  function saveBgSettings(){
+    try{ localStorage.setItem("schoolbell_bg_v1", JSON.stringify({
+      source:el.bgSource.value, url:el.bgUrl.value.trim()
+    })); }catch(e){}
+  }
+  el.bgSource.onchange=function(){
+    syncBgUrlRow(); saveBgSettings();
+    var c=loadBgCfg();
+    var canPlay=(c.source!=="net" && c.source!=="local") || (!!c.url);
+    stopBgMusic();
+    if(canPlay) setTimeout(startBgMusic, 400);
+  };
+  el.bgUrl.oninput=saveBgSettings;
+  el.bgToggle.onclick=toggleBgMusic;
+  loadBgSettings();
+
+  // 记事本（首页自定义文本框，随手记录，不会自动清除）
+  var LS_NOTE="schoolbell_note_v1";
+  function loadNote(){ try{ if(el.userNote) el.userNote.value=localStorage.getItem(LS_NOTE)||""; }catch(e){} }
+  function saveNote(){ try{ localStorage.setItem(LS_NOTE, el.userNote.value||""); }catch(e){} }
+  if(el.userNote){ el.userNote.oninput=saveNote; }
+  loadNote();
+
+  // 背景音乐悬浮按钮：可拖动（限制在屏幕内），拖拽不误触播放
+  (function(){
+    var fab=el.bgToggle; if(!fab) return;
+    var screen=document.getElementById("screen");
+    var moved=false, sx=0, sy=0, ox=0, oy=0, sr=null;
+    fab.addEventListener("pointerdown", function(e){
+      moved=false; sx=e.clientX; sy=e.clientY;
+      sr=screen.getBoundingClientRect();
+      var r=fab.getBoundingClientRect();
+      fab.style.right="auto"; fab.style.bottom="auto";
+      ox=r.left-sr.left; oy=r.top-sr.top;
+      fab.style.left=ox+"px"; fab.style.top=oy+"px";
+      function mv(ev){
+        var dx=ev.clientX-sx, dy=ev.clientY-sy;
+        if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
+        var nl=ox+dx, nt=oy+dy;
+        nl=Math.max(2, Math.min(nl, sr.width-fab.offsetWidth-2));
+        nt=Math.max(2, Math.min(nt, sr.height-fab.offsetHeight-2));
+        fab.style.left=nl+"px"; fab.style.top=nt+"px";
+      }
+      function up(){
+        document.removeEventListener("pointermove", mv);
+        document.removeEventListener("pointerup", up);
+      }
+      document.addEventListener("pointermove", mv);
+      document.addEventListener("pointerup", up);
+    });
+    fab.addEventListener("click", function(e){
+      if(moved){ e.preventDefault(); e.stopPropagation(); moved=false; }
+    }, true);
+  })();
+
+  // ---------- 提示音音效库：填充下拉 + 试听 + 持久化 ----------
+  function fillSoundSelect(sel, current){
+    sel.innerHTML="";
+    SOUND_LIBRARY.forEach(function(s){
+      var o=document.createElement("option");
+      o.value=s.id; o.textContent=s.name;
+      if(s.id===current) o.selected=true;
+      sel.appendChild(o);
+    });
+  }
+  // ---------- init ----------
+  if(loadBgOn()){ startBgMusic(); armBgResume(); }   // 刷新前开着背景乐 → 立即尝试续播（媒体参与度高的浏览器直接出声；被拦截则首次交互续播）
+  // 设置面板折叠（齿轮按钮 + 标题均可点击）
+  function toggleSettings(){
+    var collapsed = el.settingsCard.classList.toggle("collapsed");
+    if(!collapsed && typeof el.settingsCard.scrollIntoView==="function"){
+      el.settingsCard.scrollIntoView({behavior:"smooth", block:"nearest"}); // 展开后滚到可见
+    }
+  }
+  el.settingsHead.onclick=toggleSettings;
+  // 本模式安排 折叠（默认折叠，点标题展开/收起）
+  if(el.scheduleHead) el.scheduleHead.onclick=function(){
+    var collapsed=el.scheduleCard.classList.toggle("collapsed");
+    if(!collapsed && typeof el.scheduleCard.scrollIntoView==="function"){
+      el.scheduleCard.scrollIntoView({behavior:"smooth", block:"nearest"});
+    }
+  };
+  // 背景图 / 闹钟 初始化
+  renderBgImgSel();
+  renderAlarms();
+  if(localStorage.getItem("schoolbell_min_v1")==="1"){ el.phone.classList.add("locked"); }
+  // 运行态恢复：刷新后继续计时（按真实时间节点，不丢）
+  (function resumeSession(){
+    var s=loadSession();
+    if(s && s.running && s.scheduleId){
+      currentId=s.scheduleId;
+      renderModes();
+      start();
+    }
+  })();
+  // 未运行则自动以当前模式开始（选好模式即自动运行）
+  if(!state.running){ start(); }
+  renderModes(); renderScheduleList(); updateClockUI(); updateAOD();
+  tickStatusBar(); setInterval(tickStatusBar, 1000);
+  // 5 秒无操作 → 自动息屏（锁屏）
+  setupIdleAutoMin();
+  // 跨天守护：今日已结束且已进入新的一天 → 自动按“今天”重新循环，确保作息每天循环（常驻不刷新也生效）
+  setInterval(function(){
+    if(state.phase==="done" && state.bnd && state.bnd.length){
+      var anchor=state.bnd[0].dS, now=new Date();
+      var sameDay = anchor.getFullYear()===now.getFullYear() && anchor.getMonth()===now.getMonth() && anchor.getDate()===now.getDate();
+      if(!sameDay){ reset(); start(); }
+    }
+  }, 60000);
+
+  // ---------- QR 分享 ----------
+  el.shareBtn.onclick=function(){
+    var url=window.location.href.split('?')[0].split('#')[0];
+    el.qrCanvas.innerHTML="";
+    try{
+      new QRCode(el.qrCanvas, {text:url, width:180, height:180, correctLevel:QRCode.CorrectLevel.H});
+    }catch(e){ el.qrCanvas.innerHTML='<span style="color:var(--sub)">二维码加载失败</span>'; }
+    el.qrModal.classList.add("open");
+  };
+  el.qrClose.onclick=function(){ el.qrModal.classList.remove("open"); };
+  el.qrModal.onclick=function(e){ if(e.target===el.qrModal) el.qrModal.classList.remove("open"); };
+  // 注册 Service Worker（支持添加到主屏幕 / 离线缓存）
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js'); }
+})();
+</script>
+</body>
+</html>
